@@ -1,0 +1,32 @@
+{
+  "schema_version": "0.1.0",
+  "question_id": "q-unresolved-001",
+  "created_at": "2026-10-14T01:08:30Z",
+
+  "question_origin": "internal",
+  "question_type": "verification",
+
+  "intent": "determine_whether_evidence_is_sufficient",
+
+  "domain": [
+    "verification",
+    "evidence"
+  ],
+
+  "context": {
+    "summary": "The available evidence is incomplete and does not support a justified conclusion."
+  },
+
+  "risk_level": "medium",
+
+  "authority": {
+    "required": false
+  },
+
+  "status": "unresolved",
+
+  "parent_question_id": "q-parent-003",
+  "derived_from": "q-parent-003",
+
+  "trace_parent": "trace-q-parent-003"
+}
