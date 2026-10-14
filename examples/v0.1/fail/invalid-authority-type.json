@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1.0",
+  "question_id": "q-invalid-authority-type-001",
+  "created_at": "2026-10-14T01:40:00Z",
+
+  "question_origin": "external",
+  "question_type": "request",
+
+  "intent": "test_invalid_authority_type",
+
+  "domain": [
+    "authorization",
+    "validation"
+  ],
+
+  "risk_level": "medium",
+
+  "authority": {
+    "required": "true"
+  },
+
+  "status": "created"
+}
