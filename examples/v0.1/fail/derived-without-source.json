@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1.0",
+  "question_id": "q-derived-without-source-001",
+  "created_at": "2026-10-14T01:38:30Z",
+
+  "question_origin": "derived",
+  "question_type": "subquestion",
+
+  "intent": "test_missing_derivation_source",
+
+  "domain": [
+    "question_graph",
+    "validation"
+  ],
+
+  "risk_level": "low",
+
+  "authority": {
+    "required": false
+  },
+
+  "status": "created"
+}
