@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1.0",
+  "question_id": "q-missing-assignee-001",
+  "created_at": "2026-10-14T01:36:30Z",
+
+  "question_origin": "external",
+  "question_type": "request",
+
+  "intent": "route_without_assignee",
+
+  "domain": [
+    "routing",
+    "validation"
+  ],
+
+  "risk_level": "low",
+
+  "authority": {
+    "required": false
+  },
+
+  "status": "routed"
+}
