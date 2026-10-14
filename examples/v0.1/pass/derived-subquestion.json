@@ -1,0 +1,33 @@
+{
+  "schema_version": "0.1.0",
+  "question_id": "q-derived-001",
+  "created_at": "2026-10-14T01:06:00Z",
+
+  "question_origin": "derived",
+  "question_type": "subquestion",
+
+  "intent": "identify_required_permissions",
+
+  "domain": [
+    "authorization",
+    "filesystem"
+  ],
+
+  "context": {
+    "summary": "Derived from a parent request that proposes deleting an obsolete file."
+  },
+
+  "risk_level": "medium",
+
+  "authority": {
+    "required": false
+  },
+
+  "status": "routed",
+
+  "parent_question_id": "q-parent-001",
+  "derived_from": "q-parent-001",
+
+  "assigned_to": "authority-analysis-agent",
+  "trace_parent": "trace-q-parent-001"
+}
