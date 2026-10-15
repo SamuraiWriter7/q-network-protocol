@@ -12,34 +12,21 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 ROOT = Path(__file__).resolve().parents[1]
 
-SCHEMA_PATH = (
-    ROOT
-    / "schemas"
-    / "question-envelope-v0.1.schema.json"
-)
-
-PASS_DIR = (
-    ROOT
-    / "examples"
-    / "v0.1"
-    / "pass"
-)
-
-FAIL_DIR = (
-    ROOT
-    / "examples"
-    / "v0.1"
-    / "fail"
-)
-
-
-class SemanticValidationError(ValueError):
-    """Raised when an example violates Q Network semantic invariants."""
+VERSIONS = {
+    "0.1": {
+        "schema": ROOT / "schemas" / "question-envelope-v0.1.schema.json",
+        "pass_dir": ROOT / "examples" / "v0.1" / "pass",
+        "fail_dir": ROOT / "examples" / "v0.1" / "fail",
+    },
+    "0.2": {
+        "schema": ROOT / "schemas" / "question-envelope-v0.2.schema.json",
+        "pass_dir": ROOT / "examples" / "v0.2" / "pass",
+        "fail_dir": ROOT / "examples" / "v0.2" / "fail",
+    },
+}
 
 
 def load_json(path: Path) -> dict[str, Any]:
-    """Load a JSON object from disk."""
-
     try:
         with path.open("r", encoding="utf-8") as file:
             data = json.load(file)
@@ -59,8 +46,6 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def build_validator(schema: dict[str, Any]) -> Draft202012Validator:
-    """Create a Draft 2020-12 validator with format checking."""
-
     Draft202012Validator.check_schema(schema)
 
     return Draft202012Validator(
@@ -73,12 +58,6 @@ def validate_schema(
     instance: dict[str, Any],
     validator: Draft202012Validator,
 ) -> list[str]:
-    """
-    Validate an instance against the JSON Schema.
-
-    Returns a list of human-readable error messages.
-    """
-
     errors = sorted(
         validator.iter_errors(instance),
         key=lambda error: list(error.absolute_path),
@@ -102,22 +81,15 @@ def validate_schema(
     return messages
 
 
-def validate_semantics(instance: dict[str, Any]) -> list[str]:
-    """
-    Validate semantic invariants that are difficult or inappropriate
-    to express directly in JSON Schema v0.1.
-    """
-
+def validate_common_semantics(
+    instance: dict[str, Any],
+) -> list[str]:
     errors: list[str] = []
 
     question_id = instance.get("question_id")
     parent_question_id = instance.get("parent_question_id")
     derived_from = instance.get("derived_from")
 
-    # ------------------------------------------------------------
-    # Invariant:
-    # A question MUST NOT be its own parent.
-    # ------------------------------------------------------------
     if (
         question_id is not None
         and parent_question_id is not None
@@ -127,10 +99,6 @@ def validate_semantics(instance: dict[str, Any]) -> list[str]:
             "parent_question_id must not equal question_id"
         )
 
-    # ------------------------------------------------------------
-    # Invariant:
-    # A question MUST NOT be semantically derived from itself.
-    # ------------------------------------------------------------
     if (
         question_id is not None
         and derived_from is not None
@@ -143,9 +111,47 @@ def validate_semantics(instance: dict[str, Any]) -> list[str]:
     return errors
 
 
-def collect_examples(directory: Path) -> list[Path]:
-    """Return all JSON example files in deterministic order."""
+def validate_v02_semantics(
+    instance: dict[str, Any],
+) -> list[str]:
+    errors: list[str] = []
 
+    question_id = instance.get("question_id")
+    provenance = instance.get("provenance")
+
+    if isinstance(provenance, dict):
+        source_question_id = provenance.get(
+            "source_question_id"
+        )
+
+        if (
+            question_id is not None
+            and source_question_id is not None
+            and question_id == source_question_id
+        ):
+            errors.append(
+                "provenance.source_question_id "
+                "must not equal question_id"
+            )
+
+    return errors
+
+
+def validate_semantics(
+    instance: dict[str, Any],
+    version: str,
+) -> list[str]:
+    errors = validate_common_semantics(instance)
+
+    if version == "0.2":
+        errors.extend(
+            validate_v02_semantics(instance)
+        )
+
+    return errors
+
+
+def collect_examples(directory: Path) -> list[Path]:
     if not directory.exists():
         return []
 
@@ -160,8 +166,6 @@ def print_errors(
     schema_errors: list[str],
     semantic_errors: list[str],
 ) -> None:
-    """Print validation errors in a consistent format."""
-
     if schema_errors:
         print("    [schema-errors]")
 
@@ -178,13 +182,8 @@ def print_errors(
 def validate_pass_example(
     path: Path,
     validator: Draft202012Validator,
+    version: str,
 ) -> bool:
-    """
-    PASS examples must satisfy both:
-      1. JSON Schema validation
-      2. Semantic validation
-    """
-
     print(f"[PASS expected] {path.relative_to(ROOT)}")
 
     try:
@@ -198,7 +197,10 @@ def validate_pass_example(
         validator,
     )
 
-    semantic_errors = validate_semantics(instance)
+    semantic_errors = validate_semantics(
+        instance,
+        version,
+    )
 
     if schema_errors or semantic_errors:
         print("    [unexpected FAIL]")
@@ -218,22 +220,13 @@ def validate_pass_example(
 def validate_fail_example(
     path: Path,
     validator: Draft202012Validator,
+    version: str,
 ) -> bool:
-    """
-    FAIL examples must fail either:
-      1. JSON Schema validation
-      OR
-      2. Semantic validation
-
-    If both validations pass, the negative example is invalid.
-    """
-
     print(f"[FAIL expected] {path.relative_to(ROOT)}")
 
     try:
         instance = load_json(path)
     except ValueError as exc:
-        # Malformed JSON is considered a valid negative case.
         print(f"    [json-fail] {exc}")
         print("    [result] EXPECTED FAIL")
         return True
@@ -243,7 +236,10 @@ def validate_fail_example(
         validator,
     )
 
-    semantic_errors = validate_semantics(instance)
+    semantic_errors = validate_semantics(
+        instance,
+        version,
+    )
 
     if not schema_errors and not semantic_errors:
         print("    [schema-ok]")
@@ -274,113 +270,92 @@ def validate_fail_example(
     return True
 
 
-def main() -> int:
-    print("=== Q Network Protocol v0.1 Validation ===")
-    print()
-
-    # ------------------------------------------------------------
-    # Load schema
-    # ------------------------------------------------------------
-
-    if not SCHEMA_PATH.exists():
-        print(
-            f"[fatal] Schema not found: "
-            f"{SCHEMA_PATH.relative_to(ROOT)}"
-        )
-        return 1
-
-    try:
-        schema = load_json(SCHEMA_PATH)
-        validator = build_validator(schema)
-    except Exception as exc:
-        print(f"[fatal] Unable to load schema: {exc}")
-        return 1
+def validate_version(
+    version: str,
+    config: dict[str, Path],
+) -> tuple[int, int, int, int]:
+    schema_path = config["schema"]
+    pass_dir = config["pass_dir"]
+    fail_dir = config["fail_dir"]
 
     print(
-        f"[schema-ok] "
-        f"{SCHEMA_PATH.relative_to(ROOT)}"
+        f"=== Q Network Protocol v{version} Validation ==="
     )
     print()
 
-    # ------------------------------------------------------------
-    # Discover examples
-    # ------------------------------------------------------------
+    if not schema_path.exists():
+        print(
+            f"[fatal] Schema not found: "
+            f"{schema_path.relative_to(ROOT)}"
+        )
+        return 0, 0, 0, 1
 
-    pass_examples = collect_examples(PASS_DIR)
-    fail_examples = collect_examples(FAIL_DIR)
+    try:
+        schema = load_json(schema_path)
+        validator = build_validator(schema)
+    except Exception as exc:
+        print(f"[fatal] Unable to load schema: {exc}")
+        return 0, 0, 0, 1
+
+    print(
+        f"[schema-ok] "
+        f"{schema_path.relative_to(ROOT)}"
+    )
+    print()
+
+    pass_examples = collect_examples(pass_dir)
+    fail_examples = collect_examples(fail_dir)
 
     if not pass_examples:
         print(
             f"[fatal] No PASS examples found in "
-            f"{PASS_DIR.relative_to(ROOT)}"
+            f"{pass_dir.relative_to(ROOT)}"
         )
-        return 1
+        return 0, 0, 0, 1
 
     if not fail_examples:
         print(
             f"[fatal] No FAIL examples found in "
-            f"{FAIL_DIR.relative_to(ROOT)}"
+            f"{fail_dir.relative_to(ROOT)}"
         )
-        return 1
-
-    total = 0
-    matched = 0
+        return 0, 0, 0, 1
 
     pass_total = 0
     pass_matched = 0
-
     fail_total = 0
     fail_matched = 0
-
-    # ------------------------------------------------------------
-    # PASS examples
-    # ------------------------------------------------------------
 
     print("=== PASS Examples ===")
     print()
 
     for example in pass_examples:
-        total += 1
         pass_total += 1
 
-        result = validate_pass_example(
+        if validate_pass_example(
             example,
             validator,
-        )
-
-        if result:
-            matched += 1
+            version,
+        ):
             pass_matched += 1
 
         print()
-
-    # ------------------------------------------------------------
-    # FAIL examples
-    # ------------------------------------------------------------
 
     print("=== FAIL Examples ===")
     print()
 
     for example in fail_examples:
-        total += 1
         fail_total += 1
 
-        result = validate_fail_example(
+        if validate_fail_example(
             example,
             validator,
-        )
-
-        if result:
-            matched += 1
+            version,
+        ):
             fail_matched += 1
 
         print()
 
-    # ------------------------------------------------------------
-    # Summary
-    # ------------------------------------------------------------
-
-    print("=== Validation Summary ===")
+    print("=== Version Summary ===")
     print()
 
     print(
@@ -393,14 +368,85 @@ def main() -> int:
         f"{fail_matched}/{fail_total} matched expectation"
     )
 
-    print(
-        f"TOTAL         : "
-        f"{matched}/{total} matched expectation"
+    print()
+
+    return (
+        pass_matched,
+        pass_total,
+        fail_matched,
+        fail_total,
     )
+
+
+def main() -> int:
+    print("=== Q Network Protocol Validation ===")
+    print()
+
+    total_matched = 0
+    total_cases = 0
+    fatal_errors = 0
+
+    for version, config in VERSIONS.items():
+        (
+            pass_matched,
+            pass_total,
+            fail_matched,
+            fail_total,
+        ) = validate_version(
+            version,
+            config,
+        )
+
+        if (
+            pass_total == 0
+            and fail_total == 0
+        ):
+            fatal_errors += 1
+            continue
+
+        version_matched = (
+            pass_matched
+            + fail_matched
+        )
+
+        version_total = (
+            pass_total
+            + fail_total
+        )
+
+        total_matched += version_matched
+        total_cases += version_total
+
+        print(
+            f"[v{version}] "
+            f"{version_matched}/{version_total} "
+            f"matched expectation"
+        )
+        print()
+        print("-" * 60)
+        print()
+
+    print("=== Final Validation Summary ===")
+    print()
+
+    print(
+        f"TOTAL : "
+        f"{total_matched}/{total_cases} "
+        f"matched expectation"
+    )
+
+    if fatal_errors:
+        print(
+            f"FATAL : "
+            f"{fatal_errors} version validation error(s)"
+        )
 
     print()
 
-    if matched != total:
+    if (
+        fatal_errors > 0
+        or total_matched != total_cases
+    ):
         print("[validation-failed]")
         return 1
 
