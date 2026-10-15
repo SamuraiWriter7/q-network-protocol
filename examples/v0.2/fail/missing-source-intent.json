@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.2.0",
+  "question_id": "q-missing-source-intent-001",
+  "created_at": "2026-10-15T01:49:00Z",
+
+  "question_origin": "derived",
+  "question_type": "verification",
+
+  "intent": "verify_interpreted_intent",
+
+  "domain": [
+    "provenance",
+    "validation"
+  ],
+
+  "risk_level": "medium",
+
+  "authority": {
+    "required": false
+  },
+
+  "status": "created",
+
+  "parent_question_id": "q-parent-004",
+  "derived_from": "q-parent-004",
+
+  "provenance": {
+    "trigger_event": "question_received",
+    "generated_by": "planning-agent",
+    "generation_reason": "interpretation",
+
+    "source_question_id": "q-parent-004",
+
+    "interpreted_intent": "verify_interpreted_intent",
+
+    "provenance_trace": "trace-prov-missing-source-intent-001"
+  }
+}
