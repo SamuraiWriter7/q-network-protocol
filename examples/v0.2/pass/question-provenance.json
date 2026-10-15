@@ -1,0 +1,48 @@
+{
+  "schema_version": "0.2.0",
+  "question_id": "q-provenance-001",
+  "created_at": "2026-10-15T01:28:00Z",
+
+  "question_origin": "derived",
+  "question_type": "verification",
+
+  "intent": "verify_external_access_requirement",
+
+  "domain": [
+    "security",
+    "network",
+    "verification"
+  ],
+
+  "context": {
+    "summary": "Determine whether external access is actually required to satisfy the original security assessment request."
+  },
+
+  "risk_level": "high",
+
+  "authority": {
+    "required": false
+  },
+
+  "status": "routed",
+
+  "parent_question_id": "q-security-assessment-001",
+  "derived_from": "q-security-assessment-001",
+
+  "assigned_to": "security-audit-agent",
+  "trace_parent": "trace-q-security-assessment-001",
+
+  "provenance": {
+    "trigger_event": "question_received",
+    "generated_by": "planning-agent",
+    "generation_reason": "interpretation",
+
+    "source_question_id": "q-security-assessment-001",
+
+    "source_intent": "assess_system_security",
+    "interpreted_intent": "verify_external_access_requirement",
+
+    "authority_context_ref": "authority-context-security-001",
+    "provenance_trace": "trace-prov-q-provenance-001"
+  }
+}
