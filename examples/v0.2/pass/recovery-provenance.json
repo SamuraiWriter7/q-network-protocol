@@ -1,0 +1,48 @@
+{
+  "schema_version": "0.2.0",
+  "question_id": "q-recovery-prov-001",
+  "created_at": "2026-10-15T01:37:00Z",
+
+  "question_origin": "recovery",
+  "question_type": "recovery",
+
+  "intent": "determine_safe_resume_after_failure",
+
+  "domain": [
+    "recovery",
+    "operations",
+    "safety"
+  ],
+
+  "context": {
+    "summary": "A previous operation failed before completion. Determine whether recovery or resumption is safe without reusing stale assumptions or authority."
+  },
+
+  "risk_level": "high",
+
+  "authority": {
+    "required": false
+  },
+
+  "status": "routed",
+
+  "parent_question_id": "q-operation-001",
+  "derived_from": "q-operation-001",
+
+  "assigned_to": "recovery-analysis-agent",
+  "trace_parent": "trace-q-operation-001",
+
+  "provenance": {
+    "trigger_event": "action_failed",
+    "generated_by": "recovery-agent",
+    "generation_reason": "recovery",
+
+    "source_question_id": "q-operation-001",
+
+    "source_intent": "complete_operation",
+    "interpreted_intent": "determine_safe_resume_after_failure",
+
+    "authority_context_ref": "authority-context-operation-001",
+    "provenance_trace": "trace-prov-q-recovery-prov-001"
+  }
+}
