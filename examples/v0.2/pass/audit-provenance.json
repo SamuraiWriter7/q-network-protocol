@@ -1,0 +1,48 @@
+{
+  "schema_version": "0.2.0",
+  "question_id": "q-audit-prov-001",
+  "created_at": "2026-10-15T01:33:30Z",
+
+  "question_origin": "audit",
+  "question_type": "verification",
+
+  "intent": "verify_authority_before_execution",
+
+  "domain": [
+    "authorization",
+    "safety",
+    "audit"
+  ],
+
+  "context": {
+    "summary": "Verify whether valid authority exists before the proposed external action is allowed to proceed."
+  },
+
+  "risk_level": "high",
+
+  "authority": {
+    "required": false
+  },
+
+  "status": "routed",
+
+  "parent_question_id": "q-action-plan-001",
+  "derived_from": "q-action-plan-001",
+
+  "assigned_to": "authority-auditor",
+  "trace_parent": "trace-q-action-plan-001",
+
+  "provenance": {
+    "trigger_event": "risk_increased",
+    "generated_by": "safety-audit-agent",
+    "generation_reason": "authority_check",
+
+    "source_question_id": "q-action-plan-001",
+
+    "source_intent": "perform_external_action",
+    "interpreted_intent": "verify_authority_before_execution",
+
+    "authority_context_ref": "authority-context-action-001",
+    "provenance_trace": "trace-prov-q-audit-prov-001"
+  }
+}
