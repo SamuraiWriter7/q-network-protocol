@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.2.0",
+  "question_id": "q-unknown-generation-reason-001",
+  "created_at": "2026-10-15T01:56:00Z",
+
+  "question_origin": "derived",
+  "question_type": "subquestion",
+
+  "intent": "test_unknown_generation_reason",
+
+  "domain": [
+    "provenance",
+    "validation"
+  ],
+
+  "risk_level": "low",
+
+  "authority": {
+    "required": false
+  },
+
+  "status": "created",
+
+  "parent_question_id": "q-parent-005",
+  "derived_from": "q-parent-005",
+
+  "provenance": {
+    "trigger_event": "question_received",
+    "generated_by": "planning-agent",
+    "generation_reason": "optimization",
+
+    "source_question_id": "q-parent-005",
+
+    "source_intent": "process_request",
+    "interpreted_intent": "test_unknown_generation_reason",
+
+    "provenance_trace": "trace-prov-unknown-reason-001"
+  }
+}
