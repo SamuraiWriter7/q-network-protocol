@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.2.0",
+  "question_id": "q-self-prov-001",
+  "created_at": "2026-10-15T01:39:00Z",
+
+  "question_origin": "derived",
+  "question_type": "verification",
+
+  "intent": "validate_provenance_source",
+
+  "domain": [
+    "provenance",
+    "validation"
+  ],
+
+  "risk_level": "low",
+
+  "authority": {
+    "required": false
+  },
+
+  "status": "created",
+
+  "parent_question_id": "q-parent-001",
+  "derived_from": "q-parent-001",
+
+  "provenance": {
+    "trigger_event": "question_received",
+    "generated_by": "planning-agent",
+    "generation_reason": "verification",
+
+    "source_question_id": "q-self-prov-001",
+
+    "source_intent": "validate_source",
+    "interpreted_intent": "validate_provenance_source",
+
+    "provenance_trace": "trace-prov-self-001"
+  }
+}
