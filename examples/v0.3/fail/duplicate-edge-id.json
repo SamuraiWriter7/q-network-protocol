@@ -1,0 +1,28 @@
+{
+  "schema_version": "0.3.0",
+  "graph_id": "qgraph-duplicate-edge-id-001",
+  "created_at": "2026-10-16T01:54:30Z",
+
+  "graph_status": "invalid",
+
+  "nodes": [
+    "q-root-001",
+    "q-child-001",
+    "q-audit-001"
+  ],
+
+  "edges": [
+    {
+      "edge_id": "qe-duplicate-001",
+      "from_question_id": "q-root-001",
+      "to_question_id": "q-child-001",
+      "relation": "derived"
+    },
+    {
+      "edge_id": "qe-duplicate-001",
+      "from_question_id": "q-root-001",
+      "to_question_id": "q-audit-001",
+      "relation": "audited_by"
+    }
+  ]
+}
