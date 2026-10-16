@@ -1,0 +1,28 @@
+{
+  "schema_version": "0.3.0",
+  "graph_id": "qgraph-audit-branch-001",
+  "created_at": "2026-10-16T01:41:00Z",
+
+  "graph_status": "stable",
+
+  "nodes": [
+    "q-root-001",
+    "q-plan-001",
+    "q-audit-001"
+  ],
+
+  "edges": [
+    {
+      "edge_id": "qe-audit-branch-001",
+      "from_question_id": "q-root-001",
+      "to_question_id": "q-plan-001",
+      "relation": "decomposed_into"
+    },
+    {
+      "edge_id": "qe-audit-branch-002",
+      "from_question_id": "q-root-001",
+      "to_question_id": "q-audit-001",
+      "relation": "audited_by"
+    }
+  ]
+}
