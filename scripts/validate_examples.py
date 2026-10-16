@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 
 from __future__ import annotations
@@ -17,19 +18,51 @@ VERSIONS = {
         "schema": ROOT / "schemas" / "question-envelope-v0.1.schema.json",
         "pass_dir": ROOT / "examples" / "v0.1" / "pass",
         "fail_dir": ROOT / "examples" / "v0.1" / "fail",
+        "kind": "question_envelope",
     },
     "0.2": {
         "schema": ROOT / "schemas" / "question-envelope-v0.2.schema.json",
         "pass_dir": ROOT / "examples" / "v0.2" / "pass",
         "fail_dir": ROOT / "examples" / "v0.2" / "fail",
+        "kind": "question_envelope",
+    },
+    "0.3": {
+        "schema": ROOT / "schemas" / "question-graph-v0.3.schema.json",
+        "pass_dir": ROOT / "examples" / "v0.3" / "pass",
+        "fail_dir": ROOT / "examples" / "v0.3" / "fail",
+        "kind": "question_graph",
     },
 }
 
 
+# Relations that represent semantic or causal lineage.
+#
+# These edges participate in cycle detection.
+#
+# "routed_to" is intentionally excluded because routing may describe
+# operational transfer rather than semantic derivation.
+LINEAGE_RELATIONS = {
+    "derived",
+    "decomposed_into",
+    "interpreted_as",
+    "clarified_by",
+    "verified_by",
+    "audited_by",
+    "recovered_by",
+    "superseded_by",
+    "unresolved_into",
+}
+
+
 def load_json(path: Path) -> dict[str, Any]:
+    """
+    Load a JSON file and require the top-level value to be an object.
+    """
+
     try:
         with path.open("r", encoding="utf-8") as file:
             data = json.load(file)
+
     except json.JSONDecodeError as exc:
         raise ValueError(
             f"Invalid JSON in {path}: "
@@ -45,7 +78,13 @@ def load_json(path: Path) -> dict[str, Any]:
     return data
 
 
-def build_validator(schema: dict[str, Any]) -> Draft202012Validator:
+def build_validator(
+    schema: dict[str, Any],
+) -> Draft202012Validator:
+    """
+    Build a JSON Schema Draft 2020-12 validator.
+    """
+
     Draft202012Validator.check_schema(schema)
 
     return Draft202012Validator(
@@ -58,9 +97,16 @@ def validate_schema(
     instance: dict[str, Any],
     validator: Draft202012Validator,
 ) -> list[str]:
+    """
+    Return JSON Schema validation errors.
+    """
+
     errors = sorted(
         validator.iter_errors(instance),
-        key=lambda error: list(error.absolute_path),
+        key=lambda error: (
+            list(error.absolute_path),
+            error.message,
+        ),
     )
 
     messages: list[str] = []
@@ -81,14 +127,27 @@ def validate_schema(
     return messages
 
 
-def validate_common_semantics(
+# ============================================================
+# Question Envelope semantic validation
+# ============================================================
+
+
+def validate_common_question_semantics(
     instance: dict[str, Any],
 ) -> list[str]:
+    """
+    Semantic invariants shared by v0.1 and v0.2 Question Envelopes.
+    """
+
     errors: list[str] = []
 
     question_id = instance.get("question_id")
     parent_question_id = instance.get("parent_question_id")
     derived_from = instance.get("derived_from")
+
+    # --------------------------------------------------------
+    # A question MUST NOT be its own parent.
+    # --------------------------------------------------------
 
     if (
         question_id is not None
@@ -98,6 +157,10 @@ def validate_common_semantics(
         errors.append(
             "parent_question_id must not equal question_id"
         )
+
+    # --------------------------------------------------------
+    # A question MUST NOT be derived from itself.
+    # --------------------------------------------------------
 
     if (
         question_id is not None
@@ -111,47 +174,326 @@ def validate_common_semantics(
     return errors
 
 
-def validate_v02_semantics(
+def validate_v02_question_semantics(
     instance: dict[str, Any],
 ) -> list[str]:
+    """
+    Semantic invariants introduced by Question Provenance v0.2.
+    """
+
     errors: list[str] = []
 
     question_id = instance.get("question_id")
     provenance = instance.get("provenance")
 
-    if isinstance(provenance, dict):
-        source_question_id = provenance.get(
-            "source_question_id"
+    if not isinstance(provenance, dict):
+        return errors
+
+    source_question_id = provenance.get(
+        "source_question_id"
+    )
+
+    # --------------------------------------------------------
+    # A question MUST NOT identify itself as its own
+    # provenance source.
+    # --------------------------------------------------------
+
+    if (
+        question_id is not None
+        and source_question_id is not None
+        and question_id == source_question_id
+    ):
+        errors.append(
+            "provenance.source_question_id "
+            "must not equal question_id"
         )
 
-        if (
-            question_id is not None
-            and source_question_id is not None
-            and question_id == source_question_id
-        ):
-            errors.append(
-                "provenance.source_question_id "
-                "must not equal question_id"
-            )
+    return errors
+
+
+def validate_question_envelope_semantics(
+    instance: dict[str, Any],
+    version: str,
+) -> list[str]:
+    """
+    Dispatch Question Envelope semantic validation by version.
+    """
+
+    errors = validate_common_question_semantics(instance)
+
+    if version == "0.2":
+        errors.extend(
+            validate_v02_question_semantics(instance)
+        )
 
     return errors
+
+
+# ============================================================
+# Question Graph semantic validation
+# ============================================================
+
+
+def find_lineage_cycle(
+    nodes: list[str],
+    edges: list[dict[str, Any]],
+) -> list[str] | None:
+    """
+    Detect a directed cycle among semantic lineage edges.
+
+    Returns a cycle path such as:
+
+        ["q-001", "q-002", "q-001"]
+
+    or None if no cycle exists.
+
+    This uses DFS with three states:
+
+        0 = unvisited
+        1 = visiting
+        2 = complete
+    """
+
+    adjacency: dict[str, list[str]] = {
+        node: []
+        for node in nodes
+    }
+
+    for edge in edges:
+        relation = edge.get("relation")
+
+        if relation not in LINEAGE_RELATIONS:
+            continue
+
+        source = edge.get("from_question_id")
+        target = edge.get("to_question_id")
+
+        if not isinstance(source, str):
+            continue
+
+        if not isinstance(target, str):
+            continue
+
+        # Endpoint integrity is validated separately.
+        # Only include edges resolvable inside the graph.
+        if source not in adjacency:
+            continue
+
+        if target not in adjacency:
+            continue
+
+        adjacency[source].append(target)
+
+    state: dict[str, int] = {
+        node: 0
+        for node in nodes
+    }
+
+    stack: list[str] = []
+    stack_index: dict[str, int] = {}
+
+    def visit(node: str) -> list[str] | None:
+        state[node] = 1
+
+        stack_index[node] = len(stack)
+        stack.append(node)
+
+        for neighbor in adjacency.get(node, []):
+            neighbor_state = state.get(neighbor, 0)
+
+            if neighbor_state == 0:
+                cycle = visit(neighbor)
+
+                if cycle is not None:
+                    return cycle
+
+            elif neighbor_state == 1:
+                start = stack_index[neighbor]
+
+                return (
+                    stack[start:]
+                    + [neighbor]
+                )
+
+        stack.pop()
+        stack_index.pop(node, None)
+
+        state[node] = 2
+
+        return None
+
+    for node in nodes:
+        if state[node] != 0:
+            continue
+
+        cycle = visit(node)
+
+        if cycle is not None:
+            return cycle
+
+    return None
+
+
+def validate_question_graph_semantics(
+    instance: dict[str, Any],
+) -> list[str]:
+    """
+    Validate semantic invariants for Question Graph v0.3.
+    """
+
+    errors: list[str] = []
+
+    raw_nodes = instance.get("nodes", [])
+    raw_edges = instance.get("edges", [])
+
+    # Schema validation handles types, but semantic validation
+    # remains defensive so malformed inputs do not crash the
+    # validator.
+
+    if not isinstance(raw_nodes, list):
+        return errors
+
+    if not isinstance(raw_edges, list):
+        return errors
+
+    nodes = [
+        node
+        for node in raw_nodes
+        if isinstance(node, str)
+    ]
+
+    edges = [
+        edge
+        for edge in raw_edges
+        if isinstance(edge, dict)
+    ]
+
+    node_set = set(nodes)
+
+    seen_edge_ids: set[str] = set()
+
+    for index, edge in enumerate(edges):
+        edge_id = edge.get("edge_id")
+        source = edge.get("from_question_id")
+        target = edge.get("to_question_id")
+
+        edge_label = (
+            str(edge_id)
+            if edge_id is not None
+            else f"<edge-index-{index}>"
+        )
+
+        # ----------------------------------------------------
+        # Self-edge prohibition
+        # ----------------------------------------------------
+
+        if (
+            isinstance(source, str)
+            and isinstance(target, str)
+            and source == target
+        ):
+            errors.append(
+                f"edge {edge_label}: "
+                "from_question_id must not equal "
+                "to_question_id"
+            )
+
+        # ----------------------------------------------------
+        # Endpoint integrity
+        # ----------------------------------------------------
+
+        if (
+            isinstance(source, str)
+            and source not in node_set
+        ):
+            errors.append(
+                f"edge {edge_label}: "
+                f"from_question_id '{source}' "
+                "is not present in nodes"
+            )
+
+        if (
+            isinstance(target, str)
+            and target not in node_set
+        ):
+            errors.append(
+                f"edge {edge_label}: "
+                f"to_question_id '{target}' "
+                "is not present in nodes"
+            )
+
+        # ----------------------------------------------------
+        # Duplicate edge identity
+        # ----------------------------------------------------
+
+        if isinstance(edge_id, str):
+            if edge_id in seen_edge_ids:
+                errors.append(
+                    f"duplicate edge_id: {edge_id}"
+                )
+            else:
+                seen_edge_ids.add(edge_id)
+
+    # --------------------------------------------------------
+    # Semantic lineage cycle detection
+    # --------------------------------------------------------
+
+    cycle = find_lineage_cycle(
+        nodes,
+        edges,
+    )
+
+    if cycle is not None:
+        errors.append(
+            "semantic lineage cycle detected: "
+            + " -> ".join(cycle)
+        )
+
+    return errors
+
+
+# ============================================================
+# Semantic dispatcher
+# ============================================================
 
 
 def validate_semantics(
     instance: dict[str, Any],
     version: str,
+    kind: str,
 ) -> list[str]:
-    errors = validate_common_semantics(instance)
+    """
+    Dispatch semantic validation according to artifact type.
+    """
 
-    if version == "0.2":
-        errors.extend(
-            validate_v02_semantics(instance)
+    if kind == "question_envelope":
+        return validate_question_envelope_semantics(
+            instance,
+            version,
         )
 
-    return errors
+    if kind == "question_graph":
+        return validate_question_graph_semantics(
+            instance
+        )
+
+    return [
+        f"unknown validation kind: {kind}"
+    ]
 
 
-def collect_examples(directory: Path) -> list[Path]:
+# ============================================================
+# Example discovery and reporting
+# ============================================================
+
+
+def collect_examples(
+    directory: Path,
+) -> list[Path]:
+    """
+    Return all JSON example files in deterministic order.
+    """
+
     if not directory.exists():
         return []
 
@@ -166,30 +508,57 @@ def print_errors(
     schema_errors: list[str],
     semantic_errors: list[str],
 ) -> None:
+    """
+    Print validation errors consistently.
+    """
+
     if schema_errors:
         print("    [schema-errors]")
 
         for error in schema_errors:
-            print(f"      - {error}")
+            print(
+                f"      - {error}"
+            )
 
     if semantic_errors:
         print("    [semantic-errors]")
 
         for error in semantic_errors:
-            print(f"      - {error}")
+            print(
+                f"      - {error}"
+            )
+
+
+# ============================================================
+# PASS / FAIL example validation
+# ============================================================
 
 
 def validate_pass_example(
     path: Path,
     validator: Draft202012Validator,
     version: str,
+    kind: str,
 ) -> bool:
-    print(f"[PASS expected] {path.relative_to(ROOT)}")
+    """
+    PASS examples must satisfy both:
+
+      1. JSON Schema validation
+      2. Semantic validation
+    """
+
+    print(
+        f"[PASS expected] "
+        f"{path.relative_to(ROOT)}"
+    )
 
     try:
         instance = load_json(path)
+
     except ValueError as exc:
-        print(f"    [json-fail] {exc}")
+        print(
+            f"    [json-fail] {exc}"
+        )
         return False
 
     schema_errors = validate_schema(
@@ -200,19 +569,30 @@ def validate_pass_example(
     semantic_errors = validate_semantics(
         instance,
         version,
+        kind,
     )
 
     if schema_errors or semantic_errors:
-        print("    [unexpected FAIL]")
+        print(
+            "    [unexpected FAIL]"
+        )
+
         print_errors(
             schema_errors,
             semantic_errors,
         )
+
         return False
 
-    print("    [schema-ok]")
-    print("    [semantic-ok]")
-    print("    [result] PASS")
+    print(
+        "    [schema-ok]"
+    )
+    print(
+        "    [semantic-ok]"
+    )
+    print(
+        "    [result] PASS"
+    )
 
     return True
 
@@ -221,14 +601,33 @@ def validate_fail_example(
     path: Path,
     validator: Draft202012Validator,
     version: str,
+    kind: str,
 ) -> bool:
-    print(f"[FAIL expected] {path.relative_to(ROOT)}")
+    """
+    FAIL examples must fail at least one validation layer:
+
+      1. JSON parsing
+      2. JSON Schema validation
+      3. Semantic validation
+
+    If all validation layers pass, the negative example is invalid.
+    """
+
+    print(
+        f"[FAIL expected] "
+        f"{path.relative_to(ROOT)}"
+    )
 
     try:
         instance = load_json(path)
+
     except ValueError as exc:
-        print(f"    [json-fail] {exc}")
-        print("    [result] EXPECTED FAIL")
+        print(
+            f"    [json-fail] {exc}"
+        )
+        print(
+            "    [result] EXPECTED FAIL"
+        )
         return True
 
     schema_errors = validate_schema(
@@ -239,63 +638,128 @@ def validate_fail_example(
     semantic_errors = validate_semantics(
         instance,
         version,
+        kind,
     )
 
-    if not schema_errors and not semantic_errors:
-        print("    [schema-ok]")
-        print("    [semantic-ok]")
+    if (
+        not schema_errors
+        and not semantic_errors
+    ):
+        print(
+            "    [schema-ok]"
+        )
+        print(
+            "    [semantic-ok]"
+        )
         print(
             "    [unexpected PASS] "
             "Negative example passed all validation."
         )
+
         return False
 
     if schema_errors:
-        print("    [schema-fail]")
+        print(
+            "    [schema-fail]"
+        )
     else:
-        print("    [schema-ok]")
+        print(
+            "    [schema-ok]"
+        )
 
     if semantic_errors:
-        print("    [semantic-fail]")
+        print(
+            "    [semantic-fail]"
+        )
     else:
-        print("    [semantic-ok]")
+        print(
+            "    [semantic-ok]"
+        )
 
     print_errors(
         schema_errors,
         semantic_errors,
     )
 
-    print("    [result] EXPECTED FAIL")
+    print(
+        "    [result] EXPECTED FAIL"
+    )
 
     return True
 
 
+# ============================================================
+# Version validation
+# ============================================================
+
+
 def validate_version(
     version: str,
-    config: dict[str, Path],
-) -> tuple[int, int, int, int]:
-    schema_path = config["schema"]
-    pass_dir = config["pass_dir"]
-    fail_dir = config["fail_dir"]
+    config: dict[str, Any],
+) -> tuple[int, int, int, int, bool]:
+    """
+    Validate one protocol version.
+
+    Returns:
+
+        pass_matched
+        pass_total
+        fail_matched
+        fail_total
+        fatal_error
+    """
+
+    schema_path: Path = config["schema"]
+    pass_dir: Path = config["pass_dir"]
+    fail_dir: Path = config["fail_dir"]
+    kind: str = config["kind"]
 
     print(
-        f"=== Q Network Protocol v{version} Validation ==="
+        f"=== Q Network Protocol "
+        f"v{version} Validation ==="
     )
     print()
+
+    # --------------------------------------------------------
+    # Schema loading
+    # --------------------------------------------------------
 
     if not schema_path.exists():
         print(
             f"[fatal] Schema not found: "
             f"{schema_path.relative_to(ROOT)}"
         )
-        return 0, 0, 0, 1
+
+        return (
+            0,
+            0,
+            0,
+            0,
+            True,
+        )
 
     try:
-        schema = load_json(schema_path)
-        validator = build_validator(schema)
+        schema = load_json(
+            schema_path
+        )
+
+        validator = build_validator(
+            schema
+        )
+
     except Exception as exc:
-        print(f"[fatal] Unable to load schema: {exc}")
-        return 0, 0, 0, 1
+        print(
+            f"[fatal] Unable to load schema: "
+            f"{exc}"
+        )
+
+        return (
+            0,
+            0,
+            0,
+            0,
+            True,
+        )
 
     print(
         f"[schema-ok] "
@@ -303,69 +767,119 @@ def validate_version(
     )
     print()
 
-    pass_examples = collect_examples(pass_dir)
-    fail_examples = collect_examples(fail_dir)
+    # --------------------------------------------------------
+    # Example discovery
+    # --------------------------------------------------------
+
+    pass_examples = collect_examples(
+        pass_dir
+    )
+
+    fail_examples = collect_examples(
+        fail_dir
+    )
 
     if not pass_examples:
         print(
             f"[fatal] No PASS examples found in "
             f"{pass_dir.relative_to(ROOT)}"
         )
-        return 0, 0, 0, 1
+
+        return (
+            0,
+            0,
+            0,
+            0,
+            True,
+        )
 
     if not fail_examples:
         print(
             f"[fatal] No FAIL examples found in "
             f"{fail_dir.relative_to(ROOT)}"
         )
-        return 0, 0, 0, 1
+
+        return (
+            0,
+            0,
+            0,
+            0,
+            True,
+        )
 
     pass_total = 0
     pass_matched = 0
+
     fail_total = 0
     fail_matched = 0
 
-    print("=== PASS Examples ===")
+    # --------------------------------------------------------
+    # PASS examples
+    # --------------------------------------------------------
+
+    print(
+        "=== PASS Examples ==="
+    )
     print()
 
     for example in pass_examples:
         pass_total += 1
 
-        if validate_pass_example(
+        result = validate_pass_example(
             example,
             validator,
             version,
-        ):
+            kind,
+        )
+
+        if result:
             pass_matched += 1
 
         print()
 
-    print("=== FAIL Examples ===")
+    # --------------------------------------------------------
+    # FAIL examples
+    # --------------------------------------------------------
+
+    print(
+        "=== FAIL Examples ==="
+    )
     print()
 
     for example in fail_examples:
         fail_total += 1
 
-        if validate_fail_example(
+        result = validate_fail_example(
             example,
             validator,
             version,
-        ):
+            kind,
+        )
+
+        if result:
             fail_matched += 1
 
         print()
 
-    print("=== Version Summary ===")
+    # --------------------------------------------------------
+    # Version summary
+    # --------------------------------------------------------
+
+    print(
+        "=== Version Summary ==="
+    )
     print()
 
     print(
         f"PASS examples : "
-        f"{pass_matched}/{pass_total} matched expectation"
+        f"{pass_matched}/{pass_total} "
+        f"matched expectation"
     )
 
     print(
         f"FAIL examples : "
-        f"{fail_matched}/{fail_total} matched expectation"
+        f"{fail_matched}/{fail_total} "
+        f"matched expectation"
     )
 
     print()
@@ -375,16 +889,28 @@ def validate_version(
         pass_total,
         fail_matched,
         fail_total,
+        False,
     )
 
 
+# ============================================================
+# Main
+# ============================================================
+
+
 def main() -> int:
-    print("=== Q Network Protocol Validation ===")
+    print(
+        "=== Q Network Protocol Validation ==="
+    )
     print()
 
     total_matched = 0
     total_cases = 0
     fatal_errors = 0
+
+    version_results: list[
+        tuple[str, int, int]
+    ] = []
 
     for version, config in VERSIONS.items():
         (
@@ -392,16 +918,24 @@ def main() -> int:
             pass_total,
             fail_matched,
             fail_total,
+            fatal_error,
         ) = validate_version(
             version,
             config,
         )
 
-        if (
-            pass_total == 0
-            and fail_total == 0
-        ):
+        if fatal_error:
             fatal_errors += 1
+
+            print(
+                f"[v{version}] FATAL"
+            )
+            print()
+            print(
+                "-" * 60
+            )
+            print()
+
             continue
 
         version_matched = (
@@ -414,19 +948,55 @@ def main() -> int:
             + fail_total
         )
 
-        total_matched += version_matched
-        total_cases += version_total
+        total_matched += (
+            version_matched
+        )
+
+        total_cases += (
+            version_total
+        )
+
+        version_results.append(
+            (
+                version,
+                version_matched,
+                version_total,
+            )
+        )
 
         print(
             f"[v{version}] "
-            f"{version_matched}/{version_total} "
+            f"{version_matched}/"
+            f"{version_total} "
             f"matched expectation"
         )
         print()
-        print("-" * 60)
+
+        print(
+            "-" * 60
+        )
         print()
 
-    print("=== Final Validation Summary ===")
+    # --------------------------------------------------------
+    # Final summary
+    # --------------------------------------------------------
+
+    print(
+        "=== Final Validation Summary ==="
+    )
+    print()
+
+    for (
+        version,
+        matched,
+        total,
+    ) in version_results:
+        print(
+            f"v{version}: "
+            f"{matched}/{total} "
+            f"matched expectation"
+        )
+
     print()
 
     print(
@@ -438,7 +1008,8 @@ def main() -> int:
     if fatal_errors:
         print(
             f"FATAL : "
-            f"{fatal_errors} version validation error(s)"
+            f"{fatal_errors} "
+            f"version validation error(s)"
         )
 
     print()
@@ -447,12 +1018,19 @@ def main() -> int:
         fatal_errors > 0
         or total_matched != total_cases
     ):
-        print("[validation-failed]")
+        print(
+            "[validation-failed]"
+        )
         return 1
 
-    print("[validation-passed]")
+    print(
+        "[validation-passed]"
+    )
+
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(
+        main()
+    )
