@@ -1,0 +1,21 @@
+{
+  "schema_version": "0.4.0",
+  "drift_id": "qdrift-risk-authority-001",
+  "created_at": "2026-10-17T00:10:00Z",
+
+  "from_question_id": "q-analysis-001",
+  "to_question_id": "q-execution-001",
+
+  "signals": [
+    "intent_changed",
+    "risk_increased",
+    "authority_changed"
+  ],
+
+  "review_state": "human_review_required",
+
+  "detected_by": "structural-drift-monitor",
+  "detection_method": "structural",
+
+  "trace_parent": "trace-qdrift-risk-authority-001"
+}
