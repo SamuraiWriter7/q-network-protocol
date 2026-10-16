@@ -1,0 +1,27 @@
+{
+  "schema_version": "0.3.0",
+  "graph_id": "qgraph-semantic-cycle-001",
+  "created_at": "2026-10-16T01:58:00Z",
+
+  "graph_status": "invalid",
+
+  "nodes": [
+    "q-cycle-001",
+    "q-cycle-002"
+  ],
+
+  "edges": [
+    {
+      "edge_id": "qe-cycle-001",
+      "from_question_id": "q-cycle-001",
+      "to_question_id": "q-cycle-002",
+      "relation": "derived"
+    },
+    {
+      "edge_id": "qe-cycle-002",
+      "from_question_id": "q-cycle-002",
+      "to_question_id": "q-cycle-001",
+      "relation": "derived"
+    }
+  ]
+}
