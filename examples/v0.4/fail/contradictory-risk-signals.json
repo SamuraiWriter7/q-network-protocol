@@ -1,0 +1,20 @@
+{
+  "schema_version": "0.4.0",
+  "drift_id": "qdrift-contradictory-risk-001",
+  "created_at": "2026-10-17T00:20:00Z",
+
+  "from_question_id": "q-risk-source-001",
+  "to_question_id": "q-risk-target-001",
+
+  "signals": [
+    "risk_increased",
+    "risk_decreased"
+  ],
+
+  "review_state": "review_recommended",
+
+  "detected_by": "structural-drift-monitor",
+  "detection_method": "structural",
+
+  "trace_parent": "trace-qdrift-contradictory-risk-001"
+}
