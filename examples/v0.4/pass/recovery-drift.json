@@ -1,0 +1,20 @@
+{
+  "schema_version": "0.4.0",
+  "drift_id": "qdrift-recovery-001",
+  "created_at": "2026-10-17T00:11:00Z",
+
+  "from_question_id": "q-operation-001",
+  "to_question_id": "q-recovery-001",
+
+  "signals": [
+    "recovery_transition",
+    "authority_changed"
+  ],
+
+  "review_state": "review_recommended",
+
+  "detected_by": "recovery-drift-monitor",
+  "detection_method": "structural",
+
+  "trace_parent": "trace-qdrift-recovery-001"
+}
