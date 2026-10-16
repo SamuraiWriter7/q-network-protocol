@@ -1,0 +1,17 @@
+{
+  "schema_version": "0.4.0",
+  "drift_id": "qdrift-empty-signals-001",
+  "created_at": "2026-10-17T00:30:00Z",
+
+  "from_question_id": "q-source-001",
+  "to_question_id": "q-target-001",
+
+  "signals": [],
+
+  "review_state": "observe",
+
+  "detected_by": "drift-monitor-agent",
+  "detection_method": "structural",
+
+  "trace_parent": "trace-qdrift-empty-signals-001"
+}
