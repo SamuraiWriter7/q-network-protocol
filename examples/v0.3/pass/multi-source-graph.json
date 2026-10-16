@@ -1,0 +1,35 @@
+{
+  "schema_version": "0.3.0",
+  "graph_id": "qgraph-multi-source-001",
+  "created_at": "2026-10-16T01:49:00Z",
+
+  "graph_status": "stable",
+
+  "nodes": [
+    "q-analysis-001",
+    "q-audit-001",
+    "q-authority-001",
+    "q-merge-001"
+  ],
+
+  "edges": [
+    {
+      "edge_id": "qe-multi-source-001",
+      "from_question_id": "q-analysis-001",
+      "to_question_id": "q-merge-001",
+      "relation": "derived"
+    },
+    {
+      "edge_id": "qe-multi-source-002",
+      "from_question_id": "q-audit-001",
+      "to_question_id": "q-merge-001",
+      "relation": "verified_by"
+    },
+    {
+      "edge_id": "qe-multi-source-003",
+      "from_question_id": "q-authority-001",
+      "to_question_id": "q-merge-001",
+      "relation": "derived"
+    }
+  ]
+}
