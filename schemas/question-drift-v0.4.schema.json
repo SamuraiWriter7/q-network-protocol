@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/q-network-protocol/schemas/question-drift-v0.4.schema.json",
+
+  "title": "Q Network Protocol Question Drift v0.4",
+  "description": "Schema for representing structural drift signals between related questions in Q Network Protocol v0.4.",
+
+  "type": "object",
+  "additionalProperties": false,
+
+  "required": [
+    "schema_version",
+    "drift_id",
+    "created_at",
+    "from_question_id",
+    "to_question_id",
+    "signals",
+    "review_state"
+  ],
+
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.4.0",
+      "description": "Schema version for this Question Drift Record."
+    },
+
+    "drift_id": {
+      "$ref": "#/$defs/driftId"
+    },
+
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC 3339 timestamp indicating when the Drift Record was created."
+    },
+
+    "from_question_id": {
+      "$ref": "#/$defs/questionId"
+    },
+
+    "to_question_id": {
+      "$ref": "#/$defs/questionId"
+    },
+
+    "signals": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/driftSignal"
+      },
+      "description": "One or more explicit drift signals observed between the two questions."
+    },
+
+    "review_state": {
+      "$ref": "#/$defs/reviewState"
+    },
+
+    "detected_by": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "description": "Identifier of the component or participant that detected the drift."
+    },
+
+    "detection_method": {
+      "$ref": "#/$defs/detectionMethod"
+    },
+
+    "trace_parent": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Reference to an external Trace or Receipt associated with drift detection or review."
+    },
+
+    "local_score": {
+      "$ref": "#/$defs/localScore"
+    }
+  },
+
+  "$defs": {
+    "driftId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "description": "Stable identifier for a Question Drift Record."
+    },
+
+    "questionId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "description": "Identifier of a Question Envelope."
+    },
+
+    "driftSignal": {
+      "type": "string",
+      "enum": [
+        "intent_changed",
+        "domain_changed",
+        "risk_increased",
+        "risk_decreased",
+        "authority_changed",
+        "depth_increased",
+        "interpretation_hop",
+        "routing_changed",
+        "audit_missing",
+        "recovery_transition",
+        "scope_expanded",
+        "scope_narrowed"
+      ],
+      "description": "Explicit structural or semantic change observed across a question transition."
+    },
+
+    "reviewState": {
+      "type": "string",
+      "enum": [
+        "none",
+        "observe",
+        "review_recommended",
+        "hold_recommended",
+        "human_review_required"
+      ],
+      "description": "Suggested review posture associated with the observed drift."
+    },
+
+    "detectionMethod": {
+      "type": "string",
+      "enum": [
+        "structural",
+        "rule_based",
+        "semantic",
+        "hybrid",
+        "human"
+      ],
+      "description": "Method used to detect or classify the drift."
+    },
+
+    "localScore": {
+      "type": "object",
+      "additionalProperties": false,
+
+      "required": [
+        "value",
+        "method"
+      ],
+
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Implementation-local drift score. This value is not globally comparable."
+        },
+
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "description": "Identifier of the method used to produce the local score."
+        }
+      },
+
+      "description": "Optional implementation-local drift score. Explicit signals remain authoritative for protocol interpretation."
+    }
+  },
+
+  "dependentRequired": {
+    "detected_by": [
+      "detection_method"
+    ],
+    "local_score": [
+      "detection_method"
+    ]
+  }
+}
