@@ -1,0 +1,13 @@
+{
+  "schema_version": "0.3.0",
+  "graph_id": "qgraph-minimal-001",
+  "created_at": "2026-10-16T01:38:30Z",
+
+  "graph_status": "open",
+
+  "nodes": [
+    "q-root-001"
+  ],
+
+  "edges": []
+}
