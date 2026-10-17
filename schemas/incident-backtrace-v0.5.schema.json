@@ -1,0 +1,296 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/q-network-protocol/schemas/incident-backtrace-v0.5.schema.json",
+
+  "title": "Q Network Protocol Incident Backtrace v0.5",
+  "description": "Schema for evidence-preserving reverse reconstruction of incident, action, question, authority, trace, and related lineage in Q Network Protocol v0.5.",
+
+  "type": "object",
+  "additionalProperties": false,
+
+  "required": [
+    "schema_version",
+    "backtrace_id",
+    "created_at",
+    "incident_id",
+    "start_ref",
+    "status",
+    "steps"
+  ],
+
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.5.0",
+      "description": "Schema version for this Incident Backtrace Record."
+    },
+
+    "backtrace_id": {
+      "$ref": "#/$defs/backtraceId"
+    },
+
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC 3339 timestamp indicating when the Incident Backtrace Record was created."
+    },
+
+    "incident_id": {
+      "$ref": "#/$defs/referenceId"
+    },
+
+    "start_ref": {
+      "$ref": "#/$defs/startReference"
+    },
+
+    "status": {
+      "$ref": "#/$defs/backtraceStatus"
+    },
+
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/backtraceStep"
+      },
+      "description": "Ordered reverse-investigation steps beginning with the observed starting object."
+    },
+
+    "trace_parent": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Optional reference to an external Trace associated with this backtrace."
+    }
+  },
+
+  "$defs": {
+    "backtraceId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "description": "Stable identifier for an Incident Backtrace Record."
+    },
+
+    "referenceId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "description": "Identifier of an externally referenced object."
+    },
+
+    "startReference": {
+      "type": "object",
+      "additionalProperties": false,
+
+      "required": [
+        "type",
+        "id"
+      ],
+
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/startObjectType"
+        },
+
+        "id": {
+          "$ref": "#/$defs/referenceId"
+        }
+      },
+
+      "description": "Object from which reverse investigation begins."
+    },
+
+    "startObjectType": {
+      "type": "string",
+      "enum": [
+        "incident",
+        "action",
+        "result",
+        "question",
+        "trace",
+        "receipt"
+      ],
+      "description": "Allowed object types for start_ref in the minimal v0.5 model."
+    },
+
+    "backtraceStatus": {
+      "type": "string",
+      "enum": [
+        "open",
+        "partial",
+        "reconstructed",
+        "closed",
+        "inconclusive",
+        "invalid"
+      ],
+      "description": "Current reconstruction state of the Incident Backtrace Record."
+    },
+
+    "backtraceStep": {
+      "type": "object",
+      "additionalProperties": false,
+
+      "required": [
+        "step_id",
+        "sequence",
+        "object_type",
+        "object_id",
+        "relation_to_previous"
+      ],
+
+      "properties": {
+        "step_id": {
+          "$ref": "#/$defs/stepId"
+        },
+
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reverse-investigation position. Sequence 0 represents the starting observed object."
+        },
+
+        "object_type": {
+          "$ref": "#/$defs/objectType"
+        },
+
+        "object_id": {
+          "$ref": "#/$defs/referenceId"
+        },
+
+        "relation_to_previous": {
+          "$ref": "#/$defs/backtraceRelation"
+        },
+
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/referenceId"
+          },
+          "description": "External evidence supporting this backtrace step."
+        },
+
+        "drift_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/referenceId"
+          },
+          "description": "Question Drift Records associated with this transition."
+        },
+
+        "authority_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/referenceId"
+          },
+          "description": "Authority records relevant to this transition."
+        },
+
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        },
+
+        "candidate_flags": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/candidateFlag"
+          },
+          "description": "Investigative markers identifying candidate transition points without assigning final cause."
+        },
+
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "Concise externally reviewable note about the step."
+        }
+      }
+    },
+
+    "stepId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "description": "Identifier of a backtrace step."
+    },
+
+    "objectType": {
+      "type": "string",
+      "enum": [
+        "incident",
+        "result",
+        "action",
+        "plan",
+        "question",
+        "drift",
+        "authority",
+        "trace",
+        "receipt",
+        "human_intent",
+        "external_event"
+      ],
+      "description": "Type of object represented by a backtrace step."
+    },
+
+    "backtraceRelation": {
+      "type": "string",
+      "enum": [
+        "start",
+        "resulted_from",
+        "executed_from",
+        "planned_from",
+        "triggered_by",
+        "derived_from",
+        "interpreted_from",
+        "audited_from",
+        "recovered_from",
+        "authorized_by",
+        "observed_in",
+        "recorded_by",
+        "associated_with"
+      ],
+      "description": "Evidence linkage between the current earlier step and the preceding step in reverse investigative order."
+    },
+
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "supported",
+        "inferred",
+        "uncertain"
+      ],
+      "description": "Qualitative strength of evidence supporting the relationship. This is not a probability."
+    },
+
+    "candidateFlag": {
+      "type": "string",
+      "enum": [
+        "meaning_shift",
+        "risk_escalation",
+        "authority_gap",
+        "routing_anomaly",
+        "audit_missing",
+        "recovery_failure",
+        "scope_expansion",
+        "trace_gap",
+        "evidence_conflict"
+      ],
+      "description": "Investigative marker identifying a candidate transition point without assigning blame or final causality."
+    }
+  }
+}
