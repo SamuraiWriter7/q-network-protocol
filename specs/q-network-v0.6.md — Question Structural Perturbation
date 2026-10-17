@@ -1,0 +1,1473 @@
+# Q Network Protocol v0.6 — Question Structural Perturbation
+
+Version: 0.6.0
+
+## 1. Purpose
+
+Q Network Protocol v0.6 introduces **Question Structural Perturbation**.
+
+Version 0.1 defined the Question Envelope.
+
+Version 0.2 added Question Provenance.
+
+Version 0.3 added Question Graph.
+
+Version 0.4 added Question Drift.
+
+Version 0.5 added Incident Backtrace.
+
+Version 0.6 defines how to record the observable structural effects produced by a question.
+
+The purpose of Question Structural Perturbation is not to rank questions by intelligence, creativity, or quality.
+
+Its purpose is to record whether a question materially changed:
+
+- assumptions;
+- problem framing;
+- design targets;
+- downstream questions;
+- structural hypotheses;
+- resulting structures.
+
+---
+
+## 2. Core Principle
+
+The primary invariant of v0.6 is:
+
+> A question may change structure without gaining authority.
+
+Question Structural Perturbation MUST NOT be interpreted as authorization.
+
+In particular:
+
+```text
+High Qψ
+≠ High Authority
+≠ Permission
+≠ Execution Right
+```
+
+A structurally significant question MAY trigger review, branching, reinterpretation, or redesign.
+
+It MUST NOT automatically receive greater execution privilege.
+
+---
+
+## 3. Qψ
+
+Q Network MAY use the conceptual symbol:
+
+```text
+Qψ
+```
+
+to represent Question Structural Perturbation.
+
+Qψ represents:
+
+> The observable degree to which a question changes assumptions, reframes the problem space, generates downstream questions, or alters the target structure.
+
+Qψ is not required to be represented as a numeric score.
+
+The normative representation in v0.6 is an observable perturbation record.
+
+---
+
+## 4. Why Qψ Is Not a Universal Score
+
+A universal scalar such as:
+
+```text
+Qψ = 0.87
+```
+
+may appear precise while hiding subjective assumptions.
+
+Concepts such as:
+
+- novelty;
+- depth;
+- originality;
+- importance;
+- disruption;
+
+are often domain-specific and difficult to compare across systems.
+
+Therefore, v0.6 prefers explicit structural signals over universal ranking.
+
+---
+
+## 5. Structural Perturbation Model
+
+A conventional question flow may look like:
+
+```text
+Question
+    ↓
+Routing
+    ↓
+Answer / Action
+    ↓
+Trace
+```
+
+A structurally significant question may produce:
+
+```text
+Question
+    ↓
+Structural Perturbation
+    ↓
+Assumption Shift
+    ↓
+New Questions
+    ↓
+New Structure
+    ↓
+Trace
+```
+
+The question is treated as a possible source of structural change.
+
+---
+
+## 6. Question Structural Perturbation Record
+
+Version 0.6 introduces a Question Structural Perturbation Record.
+
+Canonical example:
+
+```yaml
+schema_version: "0.6.0"
+
+perturbation_id: "qsp-001"
+created_at: "2026-10-18T02:00:00Z"
+
+question_id: "q-042"
+
+signals:
+  assumption_changed: true
+  problem_frame_changed: true
+  design_target_changed: true
+  reversal_detected: false
+
+affected_assumptions:
+  - "ai_safety_requires_stronger_prevention"
+
+generated_question_count: 3
+
+downstream_question_refs:
+  - "q-043"
+  - "q-044"
+  - "q-045"
+
+downstream_structure_refs:
+  - "structural-immunity-model"
+  - "recovery-first-safety-model"
+
+classification: "structural"
+
+review_state: "independent_review_recommended"
+
+trace_parent: "trace-qsp-001"
+```
+
+---
+
+## 7. perturbation_id
+
+`perturbation_id` uniquely identifies a Question Structural Perturbation Record.
+
+Requirements:
+
+- MUST be non-empty;
+- SHOULD be unique within the applicable namespace;
+- MUST remain stable once referenced.
+
+---
+
+## 8. question_id
+
+`question_id` identifies the question being evaluated for structural effect.
+
+Example:
+
+```yaml
+question_id: "q-042"
+```
+
+The referenced question SHOULD correspond to a valid Question Envelope where available.
+
+---
+
+## 9. Structural Signals
+
+The `signals` object records observable categories of structural change.
+
+Core v0.6 fields are:
+
+```text
+assumption_changed
+problem_frame_changed
+design_target_changed
+reversal_detected
+new_questions_generated
+new_structure_generated
+```
+
+Each field is Boolean.
+
+---
+
+## 10. assumption_changed
+
+`assumption_changed` indicates that one or more prior assumptions were materially revised, rejected, or replaced.
+
+Example:
+
+```text
+Old assumption:
+AI safety requires stronger prevention.
+
+Question:
+Why must prevention be the primary strategy?
+
+New assumption:
+Recovery may be equally or more important.
+```
+
+This MAY be recorded as:
+
+```yaml
+assumption_changed: true
+```
+
+---
+
+## 11. problem_frame_changed
+
+`problem_frame_changed` indicates that the question changed the way the problem itself was defined.
+
+Example:
+
+```text
+Before:
+How do we stop a malicious AI?
+
+After:
+How does malicious behavior propagate through structure?
+```
+
+The answer space changes because the problem frame changes.
+
+---
+
+## 12. design_target_changed
+
+`design_target_changed` indicates that the object being designed, governed, or optimized changed.
+
+Example:
+
+```text
+Before:
+Design a stronger AI controller.
+
+After:
+Design a resilient multi-agent environment.
+```
+
+This represents a shift in design target.
+
+---
+
+## 13. reversal_detected
+
+`reversal_detected` indicates that the question inverted or challenged a major directional assumption.
+
+Example:
+
+```text
+Prevention
+↓
+Recovery
+```
+
+or:
+
+```text
+Central Control
+↓
+Structural Immunity
+```
+
+A reversal signal SHOULD be used only where the directional change is material.
+
+---
+
+## 14. new_questions_generated
+
+`new_questions_generated` indicates that the question caused additional questions to emerge.
+
+Example:
+
+```text
+Q0
+↓
+Q1
+├─ Q2
+├─ Q3
+└─ Q4
+```
+
+The exact count MAY be recorded separately.
+
+---
+
+## 15. new_structure_generated
+
+`new_structure_generated` indicates that downstream structural artifacts emerged from the question.
+
+Examples include:
+
+- protocol concepts;
+- architecture models;
+- governance structures;
+- design patterns;
+- operational frameworks;
+- new specification objects.
+
+---
+
+## 16. affected_assumptions
+
+`affected_assumptions` MAY contain identifiers or concise descriptions of assumptions materially changed by the question.
+
+Example:
+
+```yaml
+affected_assumptions:
+  - "central_control_is_required"
+  - "prevention_is_primary"
+```
+
+These values SHOULD remain concise and externally reviewable.
+
+Private chain-of-thought is not required.
+
+---
+
+## 17. generated_question_count
+
+`generated_question_count` MAY record the number of directly or materially downstream questions produced by the perturbation.
+
+Example:
+
+```yaml
+generated_question_count: 3
+```
+
+This field is observational.
+
+A higher number does not automatically mean a stronger or better question.
+
+---
+
+## 18. downstream_question_refs
+
+`downstream_question_refs` MAY identify questions that emerged downstream.
+
+Example:
+
+```yaml
+downstream_question_refs:
+  - "q-043"
+  - "q-044"
+  - "q-045"
+```
+
+Where possible, these references SHOULD be compatible with Question Graph.
+
+---
+
+## 19. downstream_structure_refs
+
+`downstream_structure_refs` MAY identify structural artifacts that emerged after the question.
+
+Example:
+
+```yaml
+downstream_structure_refs:
+  - "recovery-first-safety-model"
+  - "structural-immunity-model"
+```
+
+v0.6 does not define a universal schema for these structures.
+
+---
+
+## 20. Classification
+
+A Question Structural Perturbation Record MUST contain a classification.
+
+Core v0.6 values:
+
+```text
+low
+moderate
+high
+structural
+```
+
+These categories represent increasing structural significance.
+
+They are not quality rankings.
+
+---
+
+## 21. low
+
+`low` indicates limited structural change.
+
+Typical characteristics:
+
+- answer changed;
+- minor interpretation adjustment;
+- no major assumption shift;
+- no new design target.
+
+---
+
+## 22. moderate
+
+`moderate` indicates noticeable structural effect.
+
+Typical characteristics:
+
+- one or more assumptions adjusted;
+- problem framing modified;
+- some downstream questions generated.
+
+---
+
+## 23. high
+
+`high` indicates substantial structural change.
+
+Typical characteristics:
+
+- multiple assumptions changed;
+- problem frame materially altered;
+- several downstream questions generated;
+- architecture or design direction changed.
+
+---
+
+## 24. structural
+
+`structural` indicates that the question became a clear transition point in the system's conceptual or architectural lineage.
+
+Typical characteristics MAY include:
+
+- major assumption replacement;
+- problem-frame inversion;
+- design-target change;
+- new structural branches;
+- creation of new protocol or architecture concepts.
+
+`structural` does not mean "best question."
+
+It means the question became an observable structural branching point.
+
+---
+
+## 25. Classification Is Evidence-Based
+
+Classification SHOULD be supported by explicit signals and references.
+
+For example:
+
+```text
+classification = structural
+```
+
+SHOULD normally correspond to evidence such as:
+
+```text
+assumption_changed = true
+problem_frame_changed = true
+design_target_changed = true
+downstream_question_refs exist
+downstream_structure_refs exist
+```
+
+v0.6 does not require one rigid formula.
+
+---
+
+## 26. No Automatic Promotion
+
+A question MUST NOT receive stronger classification merely because:
+
+- it uses unusual language;
+- it is philosophically complex;
+- it is generated by a prestigious model;
+- many agents agree with it;
+- it produces a long answer;
+- it receives high engagement.
+
+Classification concerns observable structural effect.
+
+---
+
+## 27. Review State
+
+A Question Structural Perturbation Record MUST contain a `review_state`.
+
+Core v0.6 values:
+
+```text
+none
+observe
+structural_review_recommended
+independent_review_recommended
+human_review_required
+```
+
+---
+
+## 28. none
+
+No special review is suggested.
+
+---
+
+## 29. observe
+
+The question produced some structural effect, but no immediate review escalation is suggested.
+
+---
+
+## 30. structural_review_recommended
+
+The question appears to alter assumptions, framing, or design direction enough to justify structural review.
+
+---
+
+## 31. independent_review_recommended
+
+The question produced substantial or structural change and SHOULD be independently interpreted before downstream structure is revised.
+
+This MAY involve:
+
+- another AI model;
+- another agent;
+- another analytical method;
+- a human reviewer.
+
+---
+
+## 32. human_review_required
+
+The applicable external policy requires human review.
+
+A QSP Record MUST NOT create this authority requirement by itself.
+
+The requirement MUST originate from external policy, authority, or governance rules.
+
+---
+
+## 33. High Qψ Review Path
+
+A high or structural perturbation MAY follow:
+
+```text
+High / Structural Qψ
+        ↓
+Structural Review
+        ↓
+Alternative Interpretation
+        ↓
+Independent Review
+        ↓
+Human Review where required
+        ↓
+Possible Structural Revision
+```
+
+This is safer than converting structural significance directly into execution privilege.
+
+---
+
+## 34. Qψ and Authority
+
+The following invariant is mandatory:
+
+> High Qψ must never imply High Authority.
+
+A perturbation MAY:
+
+```text
+change interpretation
+generate hypotheses
+generate questions
+propose new structure
+trigger review
+```
+
+A perturbation MUST NOT automatically:
+
+```text
+grant permission
+expand privilege
+approve execution
+override authority
+bypass human review
+```
+
+---
+
+## 35. Qψ and Question Provenance
+
+Question Provenance MAY identify why the structurally significant question emerged.
+
+Example:
+
+```text
+Q0
+↓
+Q1
+↓
+Q2 ← structural perturbation
+```
+
+The QSP Record MAY reference `Q2`, while Provenance explains how Q2 arose.
+
+Together they answer:
+
+```text
+Why did this question arise?
+What structural effect did it produce?
+```
+
+---
+
+## 36. Qψ and Question Graph
+
+Question Graph MAY identify structural branching after a high-impact question.
+
+Example:
+
+```text
+Q0
+↓
+Q1
+↓
+Q2 ← Qψ = structural
+├─ Q3
+│  ↓
+│  Structure A
+│
+└─ Q4
+   ↓
+   Structure B
+```
+
+This makes it possible to identify where question lineage branched into multiple structural outcomes.
+
+---
+
+## 37. Qψ and Question Drift
+
+Question Drift describes change between questions.
+
+Question Structural Perturbation describes the wider structural consequences associated with a question.
+
+They are related but distinct.
+
+```text
+Question Drift
+= What changed between Q1 and Q2?
+
+Question Structural Perturbation
+= What did Q2 subsequently change in the wider structure?
+```
+
+---
+
+## 38. Qψ and Incident Backtrace
+
+Incident Backtrace MAY reference QSP records during investigation.
+
+Example:
+
+```text
+Incident
+↑
+Action
+↑
+Q5
+↑
+Q4 ← structural perturbation
+↑
+Q2
+```
+
+A structural perturbation is not evidence of blame.
+
+It is an investigative transition point.
+
+---
+
+## 39. Structural Lineage
+
+QSP enables future structural lineage such as:
+
+```text
+Original Question
+↓
+Question Provenance
+↓
+Structural Perturbation
+↓
+Structural Hypothesis
+↓
+Protocol
+↓
+Article
+↓
+Implementation
+```
+
+v0.6 records the perturbation layer.
+
+It does not fully define all downstream artifact types.
+
+---
+
+## 40. Origin of Structure
+
+Where reliable references exist, QSP MAY support reconstruction of:
+
+> Which question became the origin of a structural branch?
+
+This can be useful for:
+
+- research history;
+- protocol design;
+- architecture evolution;
+- idea provenance;
+- collaborative attribution.
+
+It MUST NOT be used to claim exclusive ownership without external evidence and applicable rules.
+
+---
+
+## 41. Multiple Perturbation Records
+
+A single question MAY have multiple QSP Records when:
+
+- different domains evaluate its effects;
+- later evidence reveals additional structural consequences;
+- independent reviewers reach different observational classifications.
+
+Such records SHOULD remain individually identifiable.
+
+---
+
+## 42. Divergent Assessments
+
+Different observers MAY assign different classifications.
+
+Example:
+
+```text
+Observer A:
+high
+
+Observer B:
+structural
+```
+
+This does not automatically make either record invalid.
+
+The records SHOULD preserve:
+
+- observer identity where appropriate;
+- evidence;
+- signal differences;
+- downstream references.
+
+---
+
+## 43. detected_by
+
+A QSP Record MAY include:
+
+```yaml
+detected_by: "structural-review-agent"
+```
+
+This identifies the participant or component that produced the perturbation observation.
+
+---
+
+## 44. detection_method
+
+A QSP Record MAY include a detection method.
+
+Recommended values:
+
+```text
+structural
+rule_based
+semantic
+hybrid
+human
+```
+
+---
+
+## 45. Structural Detection
+
+`structural` detection uses explicit observable relations.
+
+Examples:
+
+- assumption reference changed;
+- new design target appeared;
+- downstream question branch appeared;
+- downstream structure was created.
+
+Structural detection is preferred where practical because it is easier to audit.
+
+---
+
+## 46. Semantic Detection
+
+`semantic` detection MAY use:
+
+- language models;
+- classifiers;
+- embeddings;
+- semantic comparison;
+- human interpretation.
+
+Semantic results SHOULD be treated as evidence, not unquestionable truth.
+
+---
+
+## 47. Hybrid Detection
+
+`hybrid` detection combines structural and semantic evidence.
+
+Example:
+
+```text
+Question Graph branch count
++
+assumption metadata
++
+semantic interpretation comparison
+```
+
+---
+
+## 48. No Mandatory Numeric Score
+
+v0.6 does not define a universal numeric Qψ score.
+
+Implementations MAY calculate a local score.
+
+Example:
+
+```yaml
+local_score:
+  value: 0.81
+  method: "local-qsp-v1"
+```
+
+Such scores:
+
+- MUST identify their method;
+- MUST NOT be assumed globally comparable;
+- MUST NOT replace explicit perturbation signals.
+
+---
+
+## 49. Local Scores Do Not Grant Authority
+
+Regardless of numeric value:
+
+```text
+Qψ local_score = 1.0
+```
+
+MUST NOT imply:
+
+```text
+full authority
+execution approval
+policy override
+```
+
+---
+
+## 50. Evidence References
+
+A QSP Record MAY contain:
+
+```yaml
+evidence_refs:
+  - "question-graph-017"
+  - "qdrift-042"
+  - "trace-structure-009"
+```
+
+Evidence SHOULD support the claimed structural effects.
+
+---
+
+## 51. trace_parent
+
+`trace_parent` MAY link the QSP Record to a wider Trace system.
+
+Example:
+
+```yaml
+trace_parent: "trace-qsp-001"
+```
+
+This MAY support:
+
+```text
+Question
+↓
+Perturbation
+↓
+New Questions
+↓
+New Structure
+↓
+Trace
+```
+
+---
+
+## 52. Minimal QSP Record
+
+A minimal valid record MAY be:
+
+```yaml
+schema_version: "0.6.0"
+
+perturbation_id: "qsp-minimal-001"
+created_at: "2026-10-18T02:10:00Z"
+
+question_id: "q-100"
+
+signals:
+  assumption_changed: false
+  problem_frame_changed: true
+  design_target_changed: false
+  reversal_detected: false
+  new_questions_generated: false
+  new_structure_generated: false
+
+classification: "moderate"
+
+review_state: "observe"
+```
+
+---
+
+## 53. Structural QSP Example
+
+```yaml
+schema_version: "0.6.0"
+
+perturbation_id: "qsp-structural-001"
+created_at: "2026-10-18T02:20:00Z"
+
+question_id: "q-safety-reframe-001"
+
+signals:
+  assumption_changed: true
+  problem_frame_changed: true
+  design_target_changed: true
+  reversal_detected: true
+  new_questions_generated: true
+  new_structure_generated: true
+
+affected_assumptions:
+  - "ai_safety_requires_central_control"
+  - "prevention_is_primary"
+
+generated_question_count: 4
+
+downstream_question_refs:
+  - "q-recovery-001"
+  - "q-immunity-001"
+  - "q-propagation-001"
+  - "q-social-structure-001"
+
+downstream_structure_refs:
+  - "recovery-first-model"
+  - "structural-immunity-model"
+  - "propagation-safety-model"
+
+classification: "structural"
+
+review_state: "independent_review_recommended"
+
+detected_by: "structural-review-agent"
+detection_method: "hybrid"
+
+evidence_refs:
+  - "question-graph-safety-001"
+  - "qdrift-safety-001"
+
+trace_parent: "trace-qsp-structural-001"
+```
+
+---
+
+## 54. Invalid Example — Empty Structural Effect
+
+The following combination is semantically invalid if classified above `low`:
+
+```yaml
+signals:
+  assumption_changed: false
+  problem_frame_changed: false
+  design_target_changed: false
+  reversal_detected: false
+  new_questions_generated: false
+  new_structure_generated: false
+
+classification: "structural"
+```
+
+A structural classification requires observable structural evidence.
+
+---
+
+## 55. Invalid Example — Generated Question Mismatch
+
+If:
+
+```yaml
+new_questions_generated: false
+generated_question_count: 4
+```
+
+the record is semantically inconsistent.
+
+---
+
+## 56. Invalid Example — Empty Downstream Question Evidence
+
+If:
+
+```yaml
+new_questions_generated: true
+downstream_question_refs: []
+```
+
+the record MAY be structurally incomplete.
+
+For minimal v0.6 conformance, a true `new_questions_generated` signal SHOULD be supported by either:
+
+```text
+generated_question_count > 0
+```
+
+or:
+
+```text
+downstream_question_refs contains at least one reference
+```
+
+---
+
+## 57. Invalid Example — Structure Signal Mismatch
+
+If:
+
+```yaml
+new_structure_generated: false
+```
+
+but:
+
+```yaml
+downstream_structure_refs:
+  - "new-protocol"
+```
+
+the record is semantically inconsistent.
+
+---
+
+## 58. Invalid Example — Authority Escalation
+
+A QSP implementation MUST NOT translate:
+
+```text
+classification = structural
+```
+
+into:
+
+```text
+authority = elevated
+```
+
+without a separate valid authority process.
+
+Such behavior violates Q Network invariants even if the QSP Record itself is structurally valid.
+
+---
+
+## 59. Semantic Constraints
+
+A conforming v0.6 implementation SHOULD validate:
+
+### Question Generation
+
+If:
+
+```text
+generated_question_count > 0
+```
+
+then:
+
+```text
+signals.new_questions_generated = true
+```
+
+### Question References
+
+If `downstream_question_refs` is non-empty:
+
+```text
+signals.new_questions_generated = true
+```
+
+### Structure References
+
+If `downstream_structure_refs` is non-empty:
+
+```text
+signals.new_structure_generated = true
+```
+
+### Zero Effect
+
+If every structural signal is false:
+
+```text
+classification SHOULD be low
+```
+
+### Structural Classification
+
+`classification = structural` SHOULD have material supporting evidence.
+
+---
+
+## 60. Structural Classification Minimum Evidence
+
+For minimal v0.6 semantic conformance, `classification = structural` SHOULD satisfy at least one of:
+
+```text
+problem_frame_changed = true
+design_target_changed = true
+reversal_detected = true
+new_structure_generated = true
+```
+
+and SHOULD normally include more than one structural signal.
+
+This is not a quality judgment.
+
+It is a consistency check.
+
+---
+
+## 61. Review Escalation
+
+Implementations MAY map classification to suggested review posture.
+
+Example policy:
+
+```text
+low
+→ none / observe
+
+moderate
+→ observe
+
+high
+→ structural_review_recommended
+
+structural
+→ independent_review_recommended
+```
+
+This is a recommended policy pattern, not an authority rule.
+
+---
+
+## 62. Human Review Boundary
+
+Human review remains external to Qψ.
+
+The sequence is:
+
+```text
+Question
+↓
+QSP Observation
+↓
+Review Recommendation
+↓
+External Governance Decision
+```
+
+not:
+
+```text
+Question
+↓
+High Qψ
+↓
+Automatic Privilege
+```
+
+---
+
+## 63. Private Reasoning Is Not Required
+
+QSP MUST NOT require unrestricted chain-of-thought disclosure.
+
+A useful perturbation record may be derived from:
+
+```text
+Question IDs
+Question Graph
+Question Provenance
+Drift Records
+structural metadata
+downstream artifacts
+Trace
+human review
+```
+
+The protocol records observable consequences.
+
+---
+
+## 64. Append-Oriented Observation
+
+QSP records SHOULD be append-oriented where practical.
+
+Later discoveries SHOULD normally produce:
+
+- a new QSP Record;
+- a revision record;
+- an explicit superseding reference;
+
+rather than silently rewriting historical observation.
+
+---
+
+## 65. Security Considerations
+
+Implementations SHOULD consider:
+
+- fabricated downstream references;
+- inflated classifications;
+- manufactured structural importance;
+- authority escalation based on Qψ;
+- false assumption-change claims;
+- fake provenance;
+- artificial question branching;
+- manipulation of review systems.
+
+A high Qψ classification MUST be treated as an observation requiring verification.
+
+---
+
+## 66. Gaming Resistance
+
+QSP MUST NOT reward superficial behaviors such as:
+
+- producing many trivial subquestions;
+- renaming existing structures;
+- generating excessive branches;
+- using provocative language;
+- repeatedly declaring assumptions changed.
+
+Structural significance SHOULD depend on observable effects.
+
+---
+
+## 67. Privacy Considerations
+
+QSP records MAY expose intellectual or organizational history.
+
+Implementations SHOULD avoid unnecessary disclosure of:
+
+- private prompts;
+- confidential strategy;
+- personal information;
+- unreleased designs;
+- proprietary reasoning artifacts.
+
+Where possible, references SHOULD preserve structure without exposing unnecessary content.
+
+---
+
+## 68. Non-Goals of v0.6
+
+Version 0.6 does not define:
+
+- universal question quality ranking;
+- intelligence scoring;
+- creativity scoring;
+- legal ownership of ideas;
+- patent priority;
+- copyright ownership;
+- automatic authority escalation;
+- execution permission;
+- economic reward;
+- reputation scoring;
+- mandatory numeric Qψ;
+- hidden chain-of-thought disclosure.
+
+These are separate concerns.
+
+---
+
+## 69. Relationship to Earlier Versions
+
+v0.1 answers:
+
+> What is this question?
+
+v0.2 answers:
+
+> Why did this question arise?
+
+v0.3 answers:
+
+> How is this question connected to other questions?
+
+v0.4 answers:
+
+> What changed as the question moved through the network?
+
+v0.5 answers:
+
+> After an incident, how do we trace the lineage backward?
+
+v0.6 answers:
+
+> What assumptions, questions, or structures changed because this question existed?
+
+Together:
+
+```text
+Question Envelope
+        ↓
+Question Provenance
+        ↓
+Question Graph
+        ↓
+Question Drift
+        ↓
+Incident Backtrace
+        ↓
+Question Structural Perturbation
+```
+
+form the initial Q Network Core lifecycle.
+
+---
+
+## 70. Q Network Core Boundary
+
+Version 0.6 marks a natural boundary for the initial Q Network Core.
+
+The core now supports:
+
+```text
+Question Creation
+↓
+Origin
+↓
+Relationship
+↓
+Change
+↓
+Investigation
+↓
+Structural Effect
+```
+
+Future specifications MAY build on this core without expanding the original lifecycle indefinitely.
+
+Possible future extensions include:
+
+```text
+Question-to-Structure Lineage
+Structural Emergence
+Question Contribution
+Attribution
+Reward
+Inter-Network Question Circulation
+```
+
+These SHOULD be considered separate extension layers where appropriate.
+
+---
+
+## 71. Core Statements
+
+Q Network Protocol v0.6 defines Question Structural Perturbation as the observable structural effect associated with a question.
+
+Its primary invariant is:
+
+> A question may change structure without gaining authority.
+
+Its measurement principle is:
+
+> Prefer explicit structural signals over universal question scores.
+
+Its provenance principle is:
+
+> Record which assumptions, downstream questions, and structures changed.
+
+Its safety principle is:
+
+> High Qψ must never imply High Authority.
+
+Its review principle is:
+
+> Greater structural impact should increase scrutiny, not privilege.
+
+Its uncertainty principle is:
+
+> Structural significance should be supported by observable evidence, not declared by prestige or intuition alone.
+
+Its lifecycle principle is:
+
+> A question becomes structurally significant when its effects extend beyond an answer and alter assumptions, problem framing, downstream questions, or target structures.
+
+And its conceptual statement is:
+
+> An answer-changing question is useful.  
+> An assumption-changing question is strong.  
+> When a question changes structure and generates new questions, the wind has moved.
