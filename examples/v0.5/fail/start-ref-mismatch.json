@@ -1,0 +1,33 @@
+{
+  "schema_version": "0.5.0",
+  "backtrace_id": "qbacktrace-start-ref-mismatch-001",
+  "created_at": "2026-10-18T01:40:00Z",
+
+  "incident_id": "incident-start-ref-mismatch-001",
+
+  "start_ref": {
+    "type": "incident",
+    "id": "incident-start-ref-mismatch-001"
+  },
+
+  "status": "partial",
+
+  "steps": [
+    {
+      "step_id": "bt-start-ref-mismatch-001",
+      "sequence": 0,
+      "object_type": "action",
+      "object_id": "action-start-ref-mismatch-001",
+      "relation_to_previous": "start",
+      "confidence": "confirmed"
+    },
+    {
+      "step_id": "bt-start-ref-mismatch-002",
+      "sequence": 1,
+      "object_type": "question",
+      "object_id": "q-start-ref-mismatch-001",
+      "relation_to_previous": "triggered_by",
+      "confidence": "supported"
+    }
+  ]
+}
