@@ -1,0 +1,50 @@
+{
+  "schema_version": "0.6.0",
+  "perturbation_id": "qsp-structural-001",
+  "created_at": "2026-10-18T02:20:00Z",
+
+  "question_id": "q-safety-reframe-001",
+
+  "signals": {
+    "assumption_changed": true,
+    "problem_frame_changed": true,
+    "design_target_changed": true,
+    "reversal_detected": true,
+    "new_questions_generated": true,
+    "new_structure_generated": true
+  },
+
+  "affected_assumptions": [
+    "ai_safety_requires_central_control",
+    "prevention_is_primary"
+  ],
+
+  "generated_question_count": 4,
+
+  "downstream_question_refs": [
+    "q-recovery-001",
+    "q-immunity-001",
+    "q-propagation-001",
+    "q-social-structure-001"
+  ],
+
+  "downstream_structure_refs": [
+    "recovery-first-model",
+    "structural-immunity-model",
+    "propagation-safety-model"
+  ],
+
+  "classification": "structural",
+
+  "review_state": "independent_review_recommended",
+
+  "detected_by": "structural-review-agent",
+  "detection_method": "hybrid",
+
+  "evidence_refs": [
+    "question-graph-safety-001",
+    "qdrift-safety-001"
+  ],
+
+  "trace_parent": "trace-qsp-structural-001"
+}
