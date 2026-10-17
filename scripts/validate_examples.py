@@ -43,6 +43,16 @@ VERSIONS = {
         "fail_dir": ROOT / "examples" / "v0.5" / "fail",
         "kind": "incident_backtrace",
     },
+    "0.6": {
+        "schema": (
+            ROOT
+            / "schemas"
+            / "question-structural-perturbation-v0.6.schema.json"
+        ),
+        "pass_dir": ROOT / "examples" / "v0.6" / "pass",
+        "fail_dir": ROOT / "examples" / "v0.6" / "fail",
+        "kind": "question_structural_perturbation",
+    },
 }
 
 
@@ -56,6 +66,14 @@ LINEAGE_RELATIONS = {
     "recovered_by",
     "superseded_by",
     "unresolved_into",
+}
+
+
+STRUCTURAL_QSP_SIGNALS = {
+    "problem_frame_changed",
+    "design_target_changed",
+    "reversal_detected",
+    "new_structure_generated",
 }
 
 
@@ -246,9 +264,7 @@ def find_lineage_cycle(
     stack: list[str] = []
     stack_index: dict[str, int] = {}
 
-    def visit(
-        node: str,
-    ) -> list[str] | None:
+    def visit(node: str) -> list[str] | None:
         state[node] = 1
 
         stack_index[node] = len(stack)
@@ -261,9 +277,7 @@ def find_lineage_cycle(
             )
 
             if neighbor_state == 0:
-                cycle = visit(
-                    neighbor
-                )
+                cycle = visit(neighbor)
 
                 if cycle is not None:
                     return cycle
@@ -290,9 +304,7 @@ def find_lineage_cycle(
         if state[node] != 0:
             continue
 
-        cycle = visit(
-            node
-        )
+        cycle = visit(node)
 
         if cycle is not None:
             return cycle
@@ -384,9 +396,7 @@ def validate_question_graph_semantics(
                     f"duplicate edge_id: {edge_id}"
                 )
             else:
-                seen_edge_ids.add(
-                    edge_id
-                )
+                seen_edge_ids.add(edge_id)
 
     cycle = find_lineage_cycle(
         nodes,
@@ -500,10 +510,6 @@ def validate_incident_backtrace_semantics(
 
     start_relation_count = 0
 
-    # --------------------------------------------------------
-    # Per-step checks
-    # --------------------------------------------------------
-
     for index, step in enumerate(steps):
         step_id = step.get("step_id")
         sequence = step.get("sequence")
@@ -517,23 +523,13 @@ def validate_incident_backtrace_semantics(
             else f"<step-index-{index}>"
         )
 
-        # ----------------------------------------------------
-        # Duplicate step ID
-        # ----------------------------------------------------
-
         if isinstance(step_id, str):
             if step_id in seen_step_ids:
                 errors.append(
                     f"duplicate step_id: {step_id}"
                 )
             else:
-                seen_step_ids.add(
-                    step_id
-                )
-
-        # ----------------------------------------------------
-        # Duplicate sequence
-        # ----------------------------------------------------
+                seen_step_ids.add(step_id)
 
         if isinstance(sequence, int):
             if sequence in seen_sequences:
@@ -541,18 +537,12 @@ def validate_incident_backtrace_semantics(
                     f"duplicate sequence: {sequence}"
                 )
             else:
-                seen_sequences.add(
-                    sequence
-                )
+                seen_sequences.add(sequence)
 
             if sequence not in step_by_sequence:
                 step_by_sequence[
                     sequence
                 ] = step
-
-        # ----------------------------------------------------
-        # Start relation counting
-        # ----------------------------------------------------
 
         if relation == "start":
             start_relation_count += 1
@@ -567,28 +557,16 @@ def validate_incident_backtrace_semantics(
                     "is only valid at sequence 0"
                 )
 
-    # --------------------------------------------------------
-    # Sequence 0 must exist
-    # --------------------------------------------------------
-
     if 0 not in step_by_sequence:
         errors.append(
             "sequence 0 is required"
         )
-
-    # --------------------------------------------------------
-    # Exactly one start relation
-    # --------------------------------------------------------
 
     if start_relation_count != 1:
         errors.append(
             "exactly one step must use "
             "relation_to_previous 'start'"
         )
-
-    # --------------------------------------------------------
-    # Sequence continuity
-    # --------------------------------------------------------
 
     if seen_sequences:
         actual_sequences = sorted(
@@ -609,10 +587,6 @@ def validate_incident_backtrace_semantics(
                 f"actual={actual_sequences}, "
                 f"expected={expected_sequences}"
             )
-
-    # --------------------------------------------------------
-    # Start step consistency
-    # --------------------------------------------------------
 
     start_step = step_by_sequence.get(0)
 
@@ -657,18 +631,6 @@ def validate_incident_backtrace_semantics(
                 "sequence 0 object_id must match "
                 "start_ref.id"
             )
-
-    # --------------------------------------------------------
-    # Self predecessor detection
-    #
-    # Compare adjacent ordered steps:
-    #
-    # sequence N
-    # ↑
-    # sequence N+1
-    #
-    # The predecessor must not be the same object.
-    # --------------------------------------------------------
 
     ordered_sequences = sorted(
         step_by_sequence
@@ -728,6 +690,177 @@ def validate_incident_backtrace_semantics(
 
 
 # ============================================================
+# v0.6 Question Structural Perturbation semantics
+# ============================================================
+
+
+def validate_question_structural_perturbation_semantics(
+    instance: dict[str, Any],
+) -> list[str]:
+    errors: list[str] = []
+
+    signals = instance.get(
+        "signals"
+    )
+
+    if not isinstance(signals, dict):
+        return errors
+
+    classification = instance.get(
+        "classification"
+    )
+
+    generated_question_count = instance.get(
+        "generated_question_count"
+    )
+
+    downstream_question_refs = instance.get(
+        "downstream_question_refs"
+    )
+
+    downstream_structure_refs = instance.get(
+        "downstream_structure_refs"
+    )
+
+    new_questions_generated = signals.get(
+        "new_questions_generated"
+    )
+
+    new_structure_generated = signals.get(
+        "new_structure_generated"
+    )
+
+    # --------------------------------------------------------
+    # Generated question count consistency
+    # --------------------------------------------------------
+
+    if (
+        isinstance(generated_question_count, int)
+        and generated_question_count > 0
+        and new_questions_generated is False
+    ):
+        errors.append(
+            "generated_question_count > 0 requires "
+            "signals.new_questions_generated to be true"
+        )
+
+    # --------------------------------------------------------
+    # Downstream question reference consistency
+    # --------------------------------------------------------
+
+    if (
+        isinstance(downstream_question_refs, list)
+        and len(downstream_question_refs) > 0
+        and new_questions_generated is False
+    ):
+        errors.append(
+            "non-empty downstream_question_refs requires "
+            "signals.new_questions_generated to be true"
+        )
+
+    # --------------------------------------------------------
+    # Downstream structure reference consistency
+    # --------------------------------------------------------
+
+    if (
+        isinstance(downstream_structure_refs, list)
+        and len(downstream_structure_refs) > 0
+        and new_structure_generated is False
+    ):
+        errors.append(
+            "non-empty downstream_structure_refs requires "
+            "signals.new_structure_generated to be true"
+        )
+
+    # --------------------------------------------------------
+    # new_questions_generated = true should have evidence
+    # --------------------------------------------------------
+
+    if new_questions_generated is True:
+        count_evidence = (
+            isinstance(generated_question_count, int)
+            and generated_question_count > 0
+        )
+
+        reference_evidence = (
+            isinstance(downstream_question_refs, list)
+            and len(downstream_question_refs) > 0
+        )
+
+        if not (
+            count_evidence
+            or reference_evidence
+        ):
+            errors.append(
+                "signals.new_questions_generated=true "
+                "requires generated_question_count > 0 "
+                "or non-empty downstream_question_refs"
+            )
+
+    # --------------------------------------------------------
+    # new_structure_generated = true should have reference
+    # --------------------------------------------------------
+
+    if (
+        new_structure_generated is True
+        and not (
+            isinstance(downstream_structure_refs, list)
+            and len(downstream_structure_refs) > 0
+        )
+    ):
+        errors.append(
+            "signals.new_structure_generated=true "
+            "requires non-empty downstream_structure_refs"
+        )
+
+    # --------------------------------------------------------
+    # All signals false
+    # --------------------------------------------------------
+
+    boolean_signal_values = [
+        value
+        for value in signals.values()
+        if isinstance(value, bool)
+    ]
+
+    all_signals_false = (
+        len(boolean_signal_values) > 0
+        and not any(boolean_signal_values)
+    )
+
+    if (
+        all_signals_false
+        and classification != "low"
+    ):
+        errors.append(
+            "all structural signals are false, "
+            "so classification must be low"
+        )
+
+    # --------------------------------------------------------
+    # Structural classification requires material evidence
+    # --------------------------------------------------------
+
+    if classification == "structural":
+        has_material_signal = any(
+            signals.get(signal_name) is True
+            for signal_name in STRUCTURAL_QSP_SIGNALS
+        )
+
+        if not has_material_signal:
+            errors.append(
+                "classification 'structural' requires "
+                "at least one material structural signal: "
+                "problem_frame_changed, "
+                "design_target_changed, "
+                "reversal_detected, or "
+                "new_structure_generated"
+            )
+
+    return errors
+
+
+# ============================================================
 # Semantic validation dispatcher
 # ============================================================
 
@@ -756,6 +889,13 @@ def validate_semantics(
     if kind == "incident_backtrace":
         return validate_incident_backtrace_semantics(
             instance
+        )
+
+    if kind == "question_structural_perturbation":
+        return (
+            validate_question_structural_perturbation_semantics(
+                instance
+            )
         )
 
     return [
