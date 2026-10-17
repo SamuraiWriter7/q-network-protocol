@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.5.0",
+  "backtrace_id": "qbacktrace-multiple-start-relations-001",
+  "created_at": "2026-10-18T01:45:00Z",
+
+  "incident_id": "incident-multiple-start-relations-001",
+
+  "start_ref": {
+    "type": "incident",
+    "id": "incident-multiple-start-relations-001"
+  },
+
+  "status": "partial",
+
+  "steps": [
+    {
+      "step_id": "bt-multiple-start-001",
+      "sequence": 0,
+      "object_type": "incident",
+      "object_id": "incident-multiple-start-relations-001",
+      "relation_to_previous": "start",
+      "confidence": "confirmed"
+    },
+    {
+      "step_id": "bt-multiple-start-002",
+      "sequence": 1,
+      "object_type": "action",
+      "object_id": "action-multiple-start-relations-001",
+      "relation_to_previous": "resulted_from",
+      "confidence": "confirmed"
+    },
+    {
+      "step_id": "bt-multiple-start-003",
+      "sequence": 2,
+      "object_type": "question",
+      "object_id": "q-multiple-start-relations-001",
+      "relation_to_previous": "start",
+      "confidence": "supported"
+    }
+  ]
+}
