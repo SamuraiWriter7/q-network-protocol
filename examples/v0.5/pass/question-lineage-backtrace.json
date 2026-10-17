@@ -1,0 +1,78 @@
+{
+  "schema_version": "0.5.0",
+  "backtrace_id": "qbacktrace-lineage-001",
+  "created_at": "2026-10-18T01:00:00Z",
+
+  "incident_id": "incident-external-access-001",
+
+  "start_ref": {
+    "type": "incident",
+    "id": "incident-external-access-001"
+  },
+
+  "status": "reconstructed",
+
+  "steps": [
+    {
+      "step_id": "bt-lineage-001",
+      "sequence": 0,
+      "object_type": "incident",
+      "object_id": "incident-external-access-001",
+      "relation_to_previous": "start",
+      "confidence": "confirmed",
+      "evidence_refs": [
+        "trace-incident-external-access-001"
+      ]
+    },
+    {
+      "step_id": "bt-lineage-002",
+      "sequence": 1,
+      "object_type": "action",
+      "object_id": "action-external-access-001",
+      "relation_to_previous": "resulted_from",
+      "confidence": "confirmed",
+      "evidence_refs": [
+        "receipt-action-external-access-001"
+      ]
+    },
+    {
+      "step_id": "bt-lineage-003",
+      "sequence": 2,
+      "object_type": "question",
+      "object_id": "q-external-access-001",
+      "relation_to_previous": "triggered_by",
+      "confidence": "supported",
+      "drift_refs": [
+        "qdrift-risk-authority-001"
+      ],
+      "authority_refs": [
+        "authority-context-external-access-001"
+      ],
+      "candidate_flags": [
+        "risk_escalation",
+        "authority_gap"
+      ]
+    },
+    {
+      "step_id": "bt-lineage-004",
+      "sequence": 3,
+      "object_type": "question",
+      "object_id": "q-network-check-001",
+      "relation_to_previous": "interpreted_from",
+      "confidence": "supported",
+      "candidate_flags": [
+        "meaning_shift"
+      ]
+    },
+    {
+      "step_id": "bt-lineage-005",
+      "sequence": 4,
+      "object_type": "question",
+      "object_id": "q-system-safety-001",
+      "relation_to_previous": "derived_from",
+      "confidence": "confirmed"
+    }
+  ],
+
+  "trace_parent": "trace-qbacktrace-lineage-001"
+}
