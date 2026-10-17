@@ -1,0 +1,66 @@
+{
+  "schema_version": "0.5.0",
+  "backtrace_id": "qbacktrace-inconclusive-001",
+  "created_at": "2026-10-18T01:20:00Z",
+
+  "incident_id": "incident-evidence-conflict-001",
+
+  "start_ref": {
+    "type": "incident",
+    "id": "incident-evidence-conflict-001"
+  },
+
+  "status": "inconclusive",
+
+  "steps": [
+    {
+      "step_id": "bt-inconclusive-001",
+      "sequence": 0,
+      "object_type": "incident",
+      "object_id": "incident-evidence-conflict-001",
+      "relation_to_previous": "start",
+      "confidence": "confirmed",
+      "evidence_refs": [
+        "trace-incident-evidence-conflict-001"
+      ]
+    },
+    {
+      "step_id": "bt-inconclusive-002",
+      "sequence": 1,
+      "object_type": "action",
+      "object_id": "action-conflicted-001",
+      "relation_to_previous": "resulted_from",
+      "confidence": "supported",
+      "evidence_refs": [
+        "trace-action-conflicted-001",
+        "receipt-action-conflicted-001"
+      ],
+      "candidate_flags": [
+        "evidence_conflict"
+      ],
+      "notes": "Available records disagree about the authority state at the time of execution."
+    },
+    {
+      "step_id": "bt-inconclusive-003",
+      "sequence": 2,
+      "object_type": "question",
+      "object_id": "q-authority-check-001",
+      "relation_to_previous": "triggered_by",
+      "confidence": "uncertain",
+      "evidence_refs": [
+        "trace-question-authority-check-001"
+      ],
+      "authority_refs": [
+        "authority-record-valid-001",
+        "authority-record-expired-001"
+      ],
+      "candidate_flags": [
+        "authority_gap",
+        "evidence_conflict"
+      ],
+      "notes": "One authority record indicates approval while another indicates that the approval had expired."
+    }
+  ],
+
+  "trace_parent": "trace-qbacktrace-inconclusive-001"
+}
