@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.6.0",
+  "perturbation_id": "qsp-all-false-structural-001",
+  "created_at": "2026-10-18T02:35:00Z",
+
+  "question_id": "q-no-structural-effect-001",
+
+  "signals": {
+    "assumption_changed": false,
+    "problem_frame_changed": false,
+    "design_target_changed": false,
+    "reversal_detected": false,
+    "new_questions_generated": false,
+    "new_structure_generated": false
+  },
+
+  "classification": "structural",
+
+  "review_state": "independent_review_recommended",
+
+  "detected_by": "structural-review-agent",
+  "detection_method": "structural"
+}
