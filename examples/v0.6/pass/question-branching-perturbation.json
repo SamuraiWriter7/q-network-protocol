@@ -1,0 +1,37 @@
+{
+  "schema_version": "0.6.0",
+  "perturbation_id": "qsp-question-branching-001",
+  "created_at": "2026-10-18T02:30:00Z",
+
+  "question_id": "q-branch-origin-001",
+
+  "signals": {
+    "assumption_changed": false,
+    "problem_frame_changed": true,
+    "design_target_changed": false,
+    "reversal_detected": false,
+    "new_questions_generated": true,
+    "new_structure_generated": false
+  },
+
+  "generated_question_count": 3,
+
+  "downstream_question_refs": [
+    "q-branch-a-001",
+    "q-branch-b-001",
+    "q-branch-c-001"
+  ],
+
+  "classification": "high",
+
+  "review_state": "structural_review_recommended",
+
+  "detected_by": "question-graph-observer",
+  "detection_method": "structural",
+
+  "evidence_refs": [
+    "question-graph-branching-001"
+  ],
+
+  "trace_parent": "trace-qsp-question-branching-001"
+}
